@@ -3,6 +3,10 @@ import { Flex } from "@tremor/react";
 import InsightCard from "@/components/InsightCard";
 import StockDataTableCard from "@/components/StockDataTableCard";
 import { numberToText } from "@/lib/number-format";
+import {
+  getChangePercentageGroup,
+  getChangeGroupTypeToDeltaType,
+} from "@/lib/common";
 
 function addStockInsights(stockDetails) {
   const metrics = {
@@ -19,6 +23,10 @@ function addStockInsights(stockDetails) {
     highlightRed: false,
     highlight: false,
     volumeIncreasedBy: "",
+    preMarketChangeType: getChangePercentageGroup(stockDetails.preMarketChange),
+    dayChangeType: getChangePercentageGroup(stockDetails.dayChange),
+    weekChangeType: getChangePercentageGroup(stockDetails.weekChange),
+    monthChangeType: getChangePercentageGroup(stockDetails.monthChange),
   };
   const currentPrice = parseInt(stockDetails.currentPrice);
   const sixMonthHigh = parseInt(stockDetails.sixMonthHigh);
@@ -57,7 +65,14 @@ function addStockInsights(stockDetails) {
       metrics.volumeIncreasedBy = (delta * 100)?.toFixed(0);
     }
   }
-  return { ...stockDetails, ...metrics };
+  return {
+    ...stockDetails,
+    ...metrics,
+    dayChangeDeltaType: getChangeGroupTypeToDeltaType(metrics.dayChangeType),
+    preMarketChangeDeltaType: getChangeGroupTypeToDeltaType(
+      metrics.preMarketChangeType
+    ),
+  };
 }
 
 async function getStockData() {
@@ -141,16 +156,9 @@ async function getStockData() {
       fiveYearChange: item.d[11]?.toFixed(2),
       marketCap: item.d[12],
       marketCapInBillions: item.d[12] / 1000000000,
-      delta:
-        item.d[5] > 5
-          ? "increase"
-          : item.d[5] >= 0.5 && item.d[5] <= 5
-          ? "moderateIncrease"
-          : item.d[5] < -5
-          ? "decrease"
-          : item.d[5] <= -0.5 && item.d[5] <= -5
-          ? "moderateDecrease"
-          : "unchanged",
+      dayChangeType: null,
+      weekChangeType: null,
+      monthChangeType: null,
       // Others
       sixMonthHigh: item.d[13]?.toFixed(2),
       sixMonthLow: item.d[14]?.toFixed(2),
@@ -171,16 +179,8 @@ async function getStockData() {
       low: item.d[26],
       changeFromOpen: item.d[27]?.toFixed(2),
       preMarketChange: item.d[28]?.toFixed(2),
-      preMarketDelta:
-        item.d[28] > 5
-          ? "increase"
-          : item.d[28] >= 0.5 && item.d[28] <= 5
-          ? "moderateIncrease"
-          : item.d[28] < -5
-          ? "decrease"
-          : item.d[28] <= -0.5 && item.d[28] <= -5
-          ? "moderateDecrease"
-          : "unchanged",
+      preMarketChangeExact: item.d[28],
+      preMarketChangeType: null,
       preMarketVolume: numberToText(item.d[29]),
       preMarketVolumeExact: item.d[29],
       perMarketVolumePer: ((item.d[29] / item.d[19]) * 100)?.toFixed(2),
@@ -206,51 +206,7 @@ async function getStockData() {
   }
 }
 
-function getChangePercentageGroup(changeValue) {
-  const lowerBound = 0.25;
-  const lowerUpperBound = 2.5;
-  const upperBound = 5;
-  const changePercentage = parseFloat(changeValue);
-  // [Crazy Selling] Change less than -upperBound%
-  // [Heavy Selling] Change from -lowerUpperBound% to -upperBound%
-  // [Moderate Selling] Change from -lowerBound% to -lowerUpperBound%
-  // [Neutral] Change around 0%
-  // [Moderate Buying] Change from lowerBound% to lowerUpperBound%
-  // [Heavy Buying] Change from lowerUpperBound% to upperBound%
-  // [Crazy Buying] Change greater than upperBound%
-  if (changePercentage <= -upperBound) {
-    return "Crazy Selling";
-  } else if (
-    changePercentage <= -lowerUpperBound &&
-    changePercentage > -upperBound
-  ) {
-    return "Heavy Selling";
-  } else if (
-    changePercentage <= -lowerBound &&
-    changePercentage > -lowerUpperBound
-  ) {
-    return "Moderate Selling";
-  } else if (changePercentage < lowerBound && changePercentage > -lowerBound) {
-    return "Neutral";
-  } else if (
-    changePercentage >= lowerBound &&
-    changePercentage < lowerUpperBound
-  ) {
-    return "Moderate Buying";
-  } else if (
-    changePercentage >= lowerUpperBound &&
-    changePercentage < upperBound
-  ) {
-    return "Heavy Buying";
-  } else if (changePercentage >= upperBound) {
-    return "Crazy Buying";
-  }
-}
-
 function getMetricsFromStockData(stocksDataItems) {
-  // const lowerBound = 0.25;
-  // const lowerUpperBound = 2.5;
-  // const upperBound = 5;
   const changeInsights = {
     "Crazy Selling": [0, 0, 0],
     "Heavy Selling": [0, 0, 0],
@@ -259,107 +215,20 @@ function getMetricsFromStockData(stocksDataItems) {
     "Moderate Buying": [0, 0, 0],
     "Heavy Buying": [0, 0, 0],
     "Crazy Buying": [0, 0, 0],
-  } || [
-    [0, 0, 0], // Change less than -upperBound%
-    [0, 0, 0], // Change from -lowerUpperBound% to -upperBound%
-    [0, 0, 0], // Change from -lowerBound% to -lowerUpperBound%
-    [0, 0, 0], // Change around 0%
-    [0, 0, 0], // Change from lowerBound% to lowerUpperBound%
-    [0, 0, 0], // Change from lowerUpperBound% to upperBound%
-    [0, 0, 0], // Change greater than upperBound%
-  ];
+  };
   stocksDataItems.forEach((item) => {
     // Current Day
-    const dayGroupKeyName = getChangePercentageGroup(item.dayChange);
-    if (dayGroupKeyName) {
-      item.dayChangeType = dayGroupKeyName;
-      changeInsights[dayGroupKeyName][0] += 1;
+    if (item.dayChangeType) {
+      changeInsights[item.dayChangeType][0] += 1;
     }
     // Current Week
-    const weekGroupKeyName = getChangePercentageGroup(item.dayChange);
-    if (weekGroupKeyName) {
-      changeInsights[weekGroupKeyName][1] += 1;
+    if (item.weekChangeType) {
+      changeInsights[item.weekChangeType][1] += 1;
     }
     // Current Month
-    const monthGroupKeyName = getChangePercentageGroup(item.dayChange);
-    if (monthGroupKeyName) {
-      changeInsights[monthGroupKeyName][2] += 1;
+    if (item.monthChangeType) {
+      changeInsights[item.monthChangeType][2] += 1;
     }
-    // const changePercentage = parseFloat(item.dayChange);
-    // if (changePercentage <= -upperBound) {
-    //   changeInsights[0][0] = changeInsights[0][0] + 1;
-    // } else if (
-    //   changePercentage <= -lowerUpperBound &&
-    //   changePercentage > -upperBound
-    // ) {
-    //   changeInsights[1][0] = changeInsights[1][0] + 1;
-    // } else if (
-    //   changePercentage <= -lowerBound &&
-    //   changePercentage > -lowerUpperBound
-    // ) {
-    //   changeInsights[2][0] = changeInsights[1][0] + 1;
-    // } else if (
-    //   changePercentage < lowerBound &&
-    //   changePercentage > -lowerBound
-    // ) {
-    //   changeInsights[3][0] = changeInsights[2][0] + 1;
-    // } else if (
-    //   changePercentage >= lowerBound &&
-    //   changePercentage < lowerUpperBound
-    // ) {
-    //   changeInsights[4][0] = changeInsights[3][0] + 1;
-    // } else if (
-    //   changePercentage >= lowerUpperBound &&
-    //   changePercentage < upperBound
-    // ) {
-    //   changeInsights[5][0] = changeInsights[3][0] + 1;
-    // } else if (changePercentage >= upperBound) {
-    //   changeInsights[6][0] = changeInsights[4][0] + 1;
-    // }
-    // Current Week
-    // const changeWeekPercentage = parseFloat(item.weekChange);
-    // if (changeWeekPercentage < -upperBound) {
-    //   changeInsights[0][1] = changeInsights[0][1] + 1;
-    // } else if (
-    //   changeWeekPercentage <= -lowerBound &&
-    //   changeWeekPercentage >= -upperBound
-    // ) {
-    //   changeInsights[1][1] = changeInsights[1][1] + 1;
-    // } else if (
-    //   changeWeekPercentage < lowerBound &&
-    //   changeWeekPercentage > -lowerBound
-    // ) {
-    //   changeInsights[2][1] = changeInsights[2][1] + 1;
-    // } else if (
-    //   changeWeekPercentage >= lowerBound &&
-    //   changeWeekPercentage <= upperBound
-    // ) {
-    //   changeInsights[3][1] = changeInsights[3][1] + 1;
-    // } else if (changeWeekPercentage > upperBound) {
-    //   changeInsights[4][1] = changeInsights[4][1] + 1;
-    // }
-    // Current Month
-    // const changeMonthPercentage = parseFloat(item.monthChange);
-    // if (changeMonthPercentage < -5) {
-    //   changeInsights[0][2] = changeInsights[0][2] + 1;
-    // } else if (
-    //   changeMonthPercentage <= -lowerBound &&
-    //   changeMonthPercentage >= -upperBound
-    // ) {
-    //   changeInsights[1][2] = changeInsights[1][2] + 1;
-    // } else if (
-    //   changeMonthPercentage < lowerBound &&
-    //   changeMonthPercentage > -lowerBound
-    // ) {
-    //   changeInsights[2][2] = changeInsights[2][2] + 1;
-    // } else if (
-    //   changeMonthPercentage >= lowerBound &&
-    //   changeMonthPercentage <= upperBound
-    // ) {
-    //   changeInsights[3][2] = changeInsights[3][2] + 1;
-    // } else if (changeMonthPercentage > upperBound) {
-    //   changeInsights[4][2] = changeInsights[4][2] + 1;
-    // }
   });
   const keyNames = Object.keys(changeInsights);
   const colors = [
@@ -388,35 +257,6 @@ function getMetricsFromStockData(stocksDataItems) {
       color: colors[index],
     })),
   };
-  // return {
-  //   changeInsights: [
-  //     { name: "Crazy Selling", value: changeInsights[0][0], color: "red" },
-  //     { name: "Heavy Selling", value: changeInsights[1][0], color: "orange" },
-  //     { name: "Moderate Selling", value: changeInsights[1][0], color: "amber" },
-  //     { name: "Neutral", value: changeInsights[2][0], color: "yellow" },
-  //     { name: "Moderate Buying", value: changeInsights[3][0], color: "lime" },
-  //     { name: "Heavy Buying", value: changeInsights[3][0], color: "green" },
-  //     { name: "Crazy Buying", value: changeInsights[4][0], color: "emerald" },
-  //   ],
-  //   weekChangeInsights: [
-  //     { name: "Crazy Selling", value: changeInsights[0][0], color: "red" },
-  //     { name: "Heavy Selling", value: changeInsights[1][0], color: "orange" },
-  //     { name: "Moderate Selling", value: changeInsights[1][0], color: "amber" },
-  //     { name: "Neutral", value: changeInsights[2][0], color: "yellow" },
-  //     { name: "Moderate Buying", value: changeInsights[3][0], color: "lime" },
-  //     { name: "Heavy Buying", value: changeInsights[3][0], color: "green" },
-  //     { name: "Crazy Buying", value: changeInsights[4][0], color: "emerald" },
-  //   ],
-  //   monthChangeInsights: [
-  //     { name: "Crazy Selling", value: changeInsights[0][0], color: "red" },
-  //     { name: "Heavy Selling", value: changeInsights[1][0], color: "orange" },
-  //     { name: "Moderate Selling", value: changeInsights[1][0], color: "amber" },
-  //     { name: "Neutral", value: changeInsights[2][0], color: "yellow" },
-  //     { name: "Moderate Buying", value: changeInsights[3][0], color: "lime" },
-  //     { name: "Heavy Buying", value: changeInsights[3][0], color: "green" },
-  //     { name: "Crazy Buying", value: changeInsights[4][0], color: "emerald" },
-  //   ],
-  // };
 }
 
 export default async function Home() {

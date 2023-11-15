@@ -13,14 +13,7 @@ import {
   Bold,
   Switch,
 } from "@tremor/react";
-
-const nameToDeltaStatusMappings = {
-  "Crazy Selling": "decrease",
-  Selling: "moderateDecrease",
-  Neutral: "unchanged",
-  Buying: "moderateIncrease",
-  "Crazy Buying": "increase",
-};
+import { getChangeGroupTypeToDeltaType } from "@/lib/common";
 
 function InsightCard({ title, data }) {
   const [isSwitchOn, setIsSwitchOn] = useState(true);
@@ -43,7 +36,9 @@ function InsightCard({ title, data }) {
           {data.map((item: any) => (
             <ListItem key={item.name}>
               <Flex justifyContent="start" className="truncate space-x-2.5">
-                <BadgeDelta deltaType={nameToDeltaStatusMappings[item.name]} />
+                <BadgeDelta
+                  deltaType={getChangeGroupTypeToDeltaType(item.name)}
+                />
                 <Text className="truncate">{item.name}</Text>
               </Flex>
               <Text>{item.value}</Text>

@@ -25,7 +25,15 @@ import {
   Title,
   Bold,
   Text,
+  Select,
+  SelectItem,
+  Icon,
 } from "@tremor/react";
+import {
+  SortAscendingIcon,
+  SortDescendingIcon,
+  RefreshIcon,
+} from "@heroicons/react/outline";
 import axios from "axios";
 
 function formatDate(date) {
@@ -63,23 +71,54 @@ function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
   return <BadgeDelta deltaType={deltaType}>{deltaText}</BadgeDelta>;
 }
 
+function SortableColumn({ id, title, onSortItems }) {
+  const [sortDirection, setSortDirection] = useState("asc");
+
+  const onChangeSort = useCallback(() => {
+    const newSortDirection = sortDirection === "asc" ? "desc" : "asc";
+    setSortDirection(newSortDirection);
+    onSortItems(id, newSortDirection);
+  }, [id, sortDirection, onSortItems]);
+
+  return (
+    <Flex>
+      <Text>{title}</Text>
+      <Icon
+        size="sm"
+        icon={sortDirection === "asc" ? SortAscendingIcon : SortDescendingIcon}
+        variant="simple"
+        tooltip={
+          "Sort " + (sortDirection === "asc" ? "Ascending" : "Descending")
+        }
+        className="ml-1 p-0 cursor-pointer"
+        onClick={onChangeSort}
+      />
+    </Flex>
+  );
+}
+
 function StockDataTableCard({ data }) {
   const [filtered, setFiltered] = useState(data);
   const [showPrevPerf, setShowPrevPerf] = useState(false);
   const [selectMCapIndex, setSelectedMCapIndex] = useState(0);
   const [selectedStockIndex, setSelectedStockIndex] = useState(0);
-  const [selectedPref, setSelectedPref] = useState(0);
+  const [selectedChangeType, setSelectedChangeType] = useState("All");
   const [fnoStocks, setFnOStocks] = useState([]);
   const [marketNews, setMarkerNews] = useState([]);
 
-  useEffect(() => {
-    async function getFnOStockList() {
-      const response = await axios.get("/api");
-      setFnOStocks(response.data.fnoStocks || []);
-      setMarkerNews(response.data.marketNews || []);
-    }
-    getFnOStockList();
+  const getFnOStockList = useCallback(async () => {
+    const response = await axios.get("/api");
+    setFnOStocks(response.data.fnoStocks || []);
   }, []);
+
+  const getMarketNews = useCallback(async () => {
+    const response = await axios.get("/api/news");
+    setMarkerNews(response.data.marketNews || []);
+  }, []);
+
+  useEffect(() => {
+    getFnOStockList();
+  }, [getFnOStockList, getMarketNews]);
 
   const onChangeStockType = useCallback(
     (newIndex) => {
@@ -112,28 +151,46 @@ function StockDataTableCard({ data }) {
     [data]
   );
 
-  const onChangePref = useCallback(
-    (newIndex) => {
-      setSelectedPref(newIndex);
+  const onChangeDayChangeType = useCallback(
+    (newType) => {
+      setSelectedChangeType(newType);
       setFiltered(
-        newIndex === 0
+        newType === "All"
           ? data
-          : data.filter((item) =>
-              newIndex === 1
-                ? item.dayChangeExact <= -4
-                : item.dayChangeExact >= 4
-            )
+          : data.filter((item) => item.dayChangeType === newType)
       );
     },
     [data]
   );
 
+  const onSortItems = useCallback((keyName, direction) => {
+    setFiltered((prevFiltered) =>
+      prevFiltered
+        .sort((a, b) =>
+          direction === "desc"
+            ? b[keyName] - a[keyName]
+            : a[keyName] - b[keyName]
+        )
+        .map((item) => item)
+    );
+  }, []);
+
   return (
     <>
       <Card>
-        <Accordion>
+        <Accordion className="mb-6" defaultOpen={false}>
           <AccordionHeader>
-            <Title>Top Market Headlines</Title>
+            <Flex justifyContent="start">
+              <Title>Top Market Headlines</Title>
+              <Icon
+                icon={RefreshIcon}
+                size="sm"
+                variant="simple"
+                tooltip="Refresh Latest Market News"
+                className="ml-2 p-0 cursor-pointer"
+                onClick={getMarketNews}
+              />
+            </Flex>
           </AccordionHeader>
           <AccordionBody>
             <List>
@@ -150,8 +207,6 @@ function StockDataTableCard({ data }) {
             </List>
           </AccordionBody>
         </Accordion>
-      </Card>
-      <Card>
         <Flex justifyContent="between">
           <Flex>
             <Metric>Stocks ({filtered.length})</Metric>
@@ -162,17 +217,42 @@ function StockDataTableCard({ data }) {
               checked={showPrevPerf}
               onChange={setShowPrevPerf}
             />
-            <TabGroup
-              index={selectedPref}
-              onIndexChange={onChangePref}
+            <Select
+              value={selectedChangeType}
+              onValueChange={onChangeDayChangeType}
+              enableClear={false}
               className="mr-4"
             >
-              <TabList variant="solid">
-                <Tab>All</Tab>
-                <Tab>Crazy Selling</Tab>
-                <Tab>Crazy Buying</Tab>
-              </TabList>
-            </TabGroup>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Crazy Selling">
+                Crazy Selling
+                {/* (-5% or less ) */}
+              </SelectItem>
+              <SelectItem value="Heavy Selling">
+                Heavy Selling
+                {/* (-2.5% ~ -5%) */}
+              </SelectItem>
+              <SelectItem value="Moderate Selling">
+                Moderate Selling
+                {/* (-0.25% ~ -2.5%) */}
+              </SelectItem>
+              <SelectItem value="Neutral">
+                Neutral
+                {/* (-0.25% ~ 0.25%) */}
+              </SelectItem>
+              <SelectItem value="Moderate Buying">
+                Moderate Buying
+                {/* (0.25% ~ 2.5%) */}
+              </SelectItem>
+              <SelectItem value="Heavy Buying">
+                Heavy Buying
+                {/* (0.5% ~ 5%) */}
+              </SelectItem>
+              <SelectItem value="Crazy Buying">
+                Crazy Buying
+                {/* (5% or more) */}
+              </SelectItem>
+            </Select>
             <TabGroup
               index={selectedStockIndex}
               onIndexChange={onChangeStockType}
@@ -201,7 +281,11 @@ function StockDataTableCard({ data }) {
               {/* <TableHeaderCell>Sector</TableHeaderCell> */}
               <TableHeaderCell className="text-right">Price</TableHeaderCell>
               <TableHeaderCell className="text-right">
-                Pre Change
+                <SortableColumn
+                  id="preMarketChangeExact"
+                  title="Pre Change"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 Pre Volume
@@ -210,7 +294,11 @@ function StockDataTableCard({ data }) {
                 Open Change
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
-                Day Change
+                <SortableColumn
+                  id="dayChangeExact"
+                  title="Day Change"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
               {/* <TableHeaderCell className="text-right">
                 Pre to Day Close
@@ -286,7 +374,7 @@ function StockDataTableCard({ data }) {
                   <Badge color={"gray"}>{item.currentPrice}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <BadgeDelta deltaType={item.preMarketDelta}>
+                  <BadgeDelta deltaType={item.preMarketChangeDeltaType}>
                     {item.preMarketChange}%
                   </BadgeDelta>
                 </TableCell>
@@ -307,7 +395,7 @@ function StockDataTableCard({ data }) {
                   </BadgeDelta>
                 </TableCell>
                 <TableCell className="text-right">
-                  <BadgeDelta deltaType={item.delta}>
+                  <BadgeDelta deltaType={item.dayChangeDeltaType}>
                     {item.dayChange}%
                   </BadgeDelta>
                 </TableCell>
@@ -320,22 +408,82 @@ function StockDataTableCard({ data }) {
                 {showPrevPerf && (
                   <>
                     <TableCell className="text-right">
-                      {item.weekChange}%
+                      <BadgeDelta
+                        deltaType={
+                          item.weekChange === 0
+                            ? "unchanged"
+                            : item.weekChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.weekChange}%
+                      </BadgeDelta>
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.monthChange}%
+                      <BadgeDelta
+                        deltaType={
+                          item.monthChange === 0
+                            ? "unchanged"
+                            : item.monthChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.monthChange}%
+                      </BadgeDelta>
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.threeMonthChange}%
+                      <BadgeDelta
+                        deltaType={
+                          item.threeMonthChange === 0
+                            ? "unchanged"
+                            : item.threeMonthChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.threeMonthChange}%
+                      </BadgeDelta>
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.sixMonthChange}%
+                      <BadgeDelta
+                        deltaType={
+                          item.sixMonthChange === 0
+                            ? "unchanged"
+                            : item.sixMonthChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.sixMonthChange}%
+                      </BadgeDelta>
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.oneYearChange}%
+                      <BadgeDelta
+                        deltaType={
+                          item.oneYearChange === 0
+                            ? "unchanged"
+                            : item.oneYearChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.oneYearChange}%
+                      </BadgeDelta>
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.fiveYearChange}
+                      <BadgeDelta
+                        deltaType={
+                          item.fiveYearChange === 0
+                            ? "unchanged"
+                            : item.fiveYearChange > 0
+                            ? "increase"
+                            : "decrease"
+                        }
+                      >
+                        {item.fiveYearChange}%
+                      </BadgeDelta>
                     </TableCell>
                   </>
                 )}
