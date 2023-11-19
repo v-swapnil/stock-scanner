@@ -6,6 +6,10 @@ import { numberToText } from "@/lib/number-format";
 import {
   getChangePercentageGroup,
   getChangeGroupTypeToDeltaType,
+  toFixedNumber,
+  toFixedIntegerNumber,
+  getDiffOfPricesInPercentage,
+  getStockHighlights,
 } from "@/lib/common";
 
 const availableColumns = [
@@ -280,47 +284,44 @@ function addStockInsights(stockDetails) {
     downFromOneYearHigh: "0",
     highlightRed: false,
     highlight: false,
-    volumeIncreasedBy: "",
+    volumeIncreasedBy: 0,
     preMarketChangeType: getChangePercentageGroup(stockDetails.preMarketChange),
     dayChangeType: getChangePercentageGroup(stockDetails.dayChange),
     weekChangeType: getChangePercentageGroup(stockDetails.weekChange),
     monthChangeType: getChangePercentageGroup(stockDetails.monthChange),
+    highlights: getStockHighlights(stockDetails),
   };
   const currentPrice = parseInt(stockDetails.currentPrice);
   const sixMonthHigh = parseInt(stockDetails.sixMonthHigh);
   const sixMonthLow = parseInt(stockDetails.sixMonthLow);
   if (currentPrice < sixMonthHigh && currentPrice > sixMonthLow) {
-    metrics.upFromSixMonthLow = (
-      ((currentPrice - sixMonthLow) / sixMonthLow) *
-      100
-    )?.toFixed(2);
-    metrics.downFromSixMonthHigh = (
-      ((sixMonthHigh - currentPrice) / sixMonthHigh) *
-      100
-    )?.toFixed(2);
+    metrics.upFromSixMonthLow = toFixedNumber(
+      ((currentPrice - sixMonthLow) / sixMonthLow) * 100
+    );
+    metrics.downFromSixMonthHigh = toFixedNumber(
+      ((sixMonthHigh - currentPrice) / sixMonthHigh) * 100
+    );
     metrics.highlightRed =
-      currentPrice < sixMonthHigh - (sixMonthHigh - sixMonthLow) * 0.75;
+      currentPrice <= sixMonthHigh - (sixMonthHigh - sixMonthLow) * 0.75;
     metrics.highlight =
-      currentPrice < sixMonthHigh - (sixMonthHigh - sixMonthLow) * 0.5;
+      currentPrice <= sixMonthHigh - (sixMonthHigh - sixMonthLow) * 0.5;
   }
   const oneYearHigh = parseInt(stockDetails.oneYearHigh);
   const oneYearLow = parseInt(stockDetails.oneYearLow);
   if (currentPrice < oneYearHigh && currentPrice > oneYearLow) {
-    metrics.upFromOneYearLow = (
-      ((currentPrice - oneYearLow) / oneYearLow) *
-      100
-    )?.toFixed(2);
-    metrics.downFromOneYearHigh = (
-      ((oneYearHigh - currentPrice) / oneYearHigh) *
-      100
-    )?.toFixed(2);
+    metrics.upFromOneYearLow = toFixedNumber(
+      ((currentPrice - oneYearLow) / oneYearLow) * 100
+    );
+    metrics.downFromOneYearHigh = toFixedNumber(
+      ((oneYearHigh - currentPrice) / oneYearHigh) * 100
+    );
   }
   const volume = stockDetails.volumeExact;
   const tenDayAverageVolume = stockDetails.tenDayAverageVolumeExact;
   if (volume > tenDayAverageVolume) {
     const delta = (volume - tenDayAverageVolume) / tenDayAverageVolume;
     if (delta > 0.25) {
-      metrics.volumeIncreasedBy = (delta * 100)?.toFixed(0);
+      metrics.volumeIncreasedBy = toFixedIntegerNumber(delta * 100);
     }
   }
   return {
@@ -333,7 +334,7 @@ function addStockInsights(stockDetails) {
   };
 }
 
-async function getStockData() {
+async function getStockData(searchParams) {
   const url = "https://scanner.tradingview.com/india/scan";
   const data = {
     filter: [
@@ -413,28 +414,33 @@ async function getStockData() {
       name: item.d[0],
       description: item.d[1],
       sector: item.d[2],
-      currentPrice: item.d[3]?.toFixed(2),
-      dayChangeAbs: item.d[4]?.toFixed(2),
-      dayChange: item.d[5]?.toFixed(2),
+      currentPrice: toFixedNumber(item.d[3]),
+      currentPriceExact: item.d[3],
+      dayChangeAbs: toFixedNumber(item.d[4]),
+      dayChange: toFixedNumber(item.d[5]),
       dayChangeExact: item.d[5],
-      weekChange: item.d[6]?.toFixed(2),
-      monthChange: item.d[7]?.toFixed(2),
-      threeMonthChange: item.d[8]?.toFixed(2),
-      sixMonthChange: item.d[9]?.toFixed(2),
-      oneYearChange: item.d[10]?.toFixed(2),
-      fiveYearChange: item.d[11]?.toFixed(2),
+      weekChange: toFixedNumber(item.d[6]),
+      weekChangeExact: item.d[6],
+      monthChange: toFixedNumber(item.d[7]),
+      monthChangeExact: item.d[7],
+      threeMonthChange: toFixedNumber(item.d[8]),
+      sixMonthChange: toFixedNumber(item.d[9]),
+      oneYearChange: toFixedNumber(item.d[10]),
+      fiveYearChange: toFixedNumber(item.d[11]),
       marketCap: item.d[12],
       marketCapInBillions: item.d[12] / 1000000000,
       dayChangeType: null,
       weekChangeType: null,
       monthChangeType: null,
       // Others
-      sixMonthHigh: item.d[13]?.toFixed(2),
-      sixMonthLow: item.d[14]?.toFixed(2),
-      oneYearHigh: item.d[15]?.toFixed(2),
-      oneYearLow: item.d[16]?.toFixed(2),
-      allTimeHigh: item.d[17]?.toFixed(2),
-      allTimeLow: item.d[18]?.toFixed(2),
+      sixMonthHigh: toFixedNumber(item.d[13]),
+      sixMonthHighExact: item.d[13],
+      sixMonthLow: toFixedNumber(item.d[14]),
+      sixMonthLowExact: item.d[14],
+      oneYearHigh: toFixedNumber(item.d[15]),
+      oneYearLow: toFixedNumber(item.d[16]),
+      allTimeHigh: toFixedNumber(item.d[17]),
+      allTimeLow: toFixedNumber(item.d[18]),
       tenDayAverageVolume: numberToText(item.d[19]),
       tenDayAverageVolumeExact: item.d[19],
       thirtyDayAverageVolume: numberToText(item.d[20]),
@@ -446,15 +452,47 @@ async function getStockData() {
       close: item.d[24],
       high: item.d[25],
       low: item.d[26],
-      changeFromOpen: item.d[27]?.toFixed(2),
-      preMarketChange: item.d[28]?.toFixed(2),
+      changeFromOpen: toFixedNumber(item.d[27]),
+      preMarketChange: toFixedNumber(item.d[28]),
       preMarketChangeExact: item.d[28],
       preMarketChangeType: null,
       preMarketVolume: numberToText(item.d[29]),
       preMarketVolumeExact: item.d[29],
-      perMarketVolumePer: ((item.d[29] / item.d[19]) * 100)?.toFixed(2),
+      perMarketVolumePer: toFixedNumber((item.d[29] / item.d[19]) * 100),
+      tenDayEMA: toFixedIntegerNumber(item.d[30]),
+      twentyDayEMA: toFixedIntegerNumber(item.d[31]),
+      fiftyDayEMA: toFixedIntegerNumber(item.d[32]),
+      fiftyDayEMADiff: getDiffOfPricesInPercentage(item.d[3], item.d[32], 1),
+      hundredDayEMA: toFixedIntegerNumber(item.d[33]),
+      hundredDayEMADiff: getDiffOfPricesInPercentage(item.d[3], item.d[33], 1),
+      twoHundredDayEMA: toFixedIntegerNumber(item.d[34]),
+      twoHundredDayEMADiff: getDiffOfPricesInPercentage(
+        item.d[3],
+        item.d[34],
+        1
+      ),
+      tenDaySMA: toFixedIntegerNumber(item.d[35]),
+      twentyDaySMA: toFixedIntegerNumber(item.d[36]),
+      fiftyDaySMA: toFixedIntegerNumber(item.d[37]),
+      fiftyDaySMADiff: getDiffOfPricesInPercentage(item.d[3], item.d[37], 1),
+      hundredDaySMA: toFixedIntegerNumber(item.d[38]),
+      hundredDaySMADiff: getDiffOfPricesInPercentage(item.d[3], item.d[38], 1),
+      twoHundredDaySMA: toFixedIntegerNumber(item.d[39]),
+      twoHundredDaySMADiff: getDiffOfPricesInPercentage(
+        item.d[3],
+        item.d[39],
+        1
+      ),
     }));
-    return formattedDataItems.map((item) => addStockInsights(item));
+    const filteredDataItems = formattedDataItems
+      // Remove Expensive Stocks
+      .filter(
+        (item) =>
+          searchParams.expensive_stocks === "true" ||
+          item.currentPriceExact < 10000
+      )
+      .map((item) => addStockInsights(item));
+    return filteredDataItems;
   } catch (error: any) {
     if (error.response) {
       // The request was made and the server responded with a status code
@@ -528,8 +566,8 @@ function getMetricsFromStockData(stocksDataItems) {
   };
 }
 
-export default async function Home() {
-  const stocksDataItems = await getStockData();
+export default async function Home({ searchParams }) {
+  const stocksDataItems = await getStockData(searchParams);
   const stocksMetrics = getMetricsFromStockData(stocksDataItems);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">

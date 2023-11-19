@@ -35,14 +35,7 @@ import {
   RefreshIcon,
 } from "@heroicons/react/outline";
 import axios from "axios";
-
-function formatDate(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(new Date(date));
-}
+import { formatDate } from "@/lib/common";
 
 function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
   const dayChangeParsed = parseFloat(dayChange);
@@ -94,6 +87,20 @@ function SortableColumn({ id, title, onSortItems }) {
         onClick={onChangeSort}
       />
     </Flex>
+  );
+}
+
+function MovingAverageBadge({ className, maPrice, maDiffPercentage }) {
+  const deltaType =
+    maDiffPercentage < 0.5 && maDiffPercentage > -0.5
+      ? "unchanged"
+      : maDiffPercentage >= 0.5
+      ? "increase"
+      : "decrease";
+  return (
+    <BadgeDelta className={className} deltaType={deltaType}>
+      {maPrice} ({maDiffPercentage}%)
+    </BadgeDelta>
   );
 }
 
@@ -279,7 +286,13 @@ function StockDataTableCard({ data }) {
             <TableRow>
               <TableHeaderCell>Name</TableHeaderCell>
               {/* <TableHeaderCell>Sector</TableHeaderCell> */}
-              <TableHeaderCell className="text-right">Price</TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                <SortableColumn
+                  id="currentPriceExact"
+                  title="Price"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="preMarketChangeExact"
@@ -306,10 +319,18 @@ function StockDataTableCard({ data }) {
               {showPrevPerf && (
                 <>
                   <TableHeaderCell className="text-right">
-                    Week Change
+                    <SortableColumn
+                      id="weekChangeExact"
+                      title="Week Change"
+                      onSortItems={onSortItems}
+                    />
                   </TableHeaderCell>
                   <TableHeaderCell className="text-right">
-                    Month Change
+                    <SortableColumn
+                      id="monthChangeExact"
+                      title="Month Change"
+                      onSortItems={onSortItems}
+                    />
                   </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     3 Month Change
@@ -335,6 +356,15 @@ function StockDataTableCard({ data }) {
                 Avg Volume
               </TableHeaderCell>
               <TableHeaderCell className="text-right">Volume</TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                SMA (50, 100 and 200)
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                EMA (50, 100 and 200)
+              </TableHeaderCell>
+              {/* <TableHeaderCell className="text-right">
+                Highlights
+              </TableHeaderCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -516,6 +546,43 @@ function StockDataTableCard({ data }) {
                     )}
                   </Flex>
                 </TableCell>
+                <TableCell className="text-right">
+                  <MovingAverageBadge
+                    className="mr-2"
+                    maPrice={item.fiftyDaySMA}
+                    maDiffPercentage={item.fiftyDaySMADiff}
+                  />
+                  <MovingAverageBadge
+                    className="mr-2"
+                    maPrice={item.hundredDaySMA}
+                    maDiffPercentage={item.hundredDaySMADiff}
+                  />
+                  <MovingAverageBadge
+                    className=""
+                    maPrice={item.twoHundredDaySMA}
+                    maDiffPercentage={item.twoHundredDaySMADiff}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <MovingAverageBadge
+                    className="mr-2"
+                    maPrice={item.fiftyDayEMA}
+                    maDiffPercentage={item.fiftyDayEMADiff}
+                  />
+                  <MovingAverageBadge
+                    className="mr-2"
+                    maPrice={item.hundredDayEMA}
+                    maDiffPercentage={item.hundredDayEMADiff}
+                  />
+                  <MovingAverageBadge
+                    className=""
+                    maPrice={item.twoHundredDayEMA}
+                    maDiffPercentage={item.twoHundredDayEMADiff}
+                  />
+                </TableCell>
+                {/* <TableCell className="text-right">
+                  {item.highlights.join(", ")}
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
