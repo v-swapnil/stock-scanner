@@ -90,15 +90,16 @@ export function formatDate(date) {
 }
 
 export function getStockHighlights(stockDetails) {
+  const upperBound = 2.5;
   const downFromSixMonthHighPoints =
     stockDetails.sixMonthHighExact - stockDetails.sixMonthLowExact;
   const highlights = {
-    "near-50-ema": stockDetails.fiftyDayEMADiff <= 5,
-    "near-100-ema": stockDetails.hundredDayEMADiff <= 5,
-    "near-200-ema": stockDetails.twoHundredDayEMADiff <= 5,
-    "near-50-sma": stockDetails.fiftyDaySMADiff <= 5,
-    "near-100-sma": stockDetails.hundredDaySMADiff <= 5,
-    "near-200-sma": stockDetails.twoHundredDaySMADiff <= 5,
+    "near-50-ema": stockDetails.fiftyDayEMADiff <= upperBound,
+    "near-100-ema": stockDetails.hundredDayEMADiff <= upperBound,
+    "near-200-ema": stockDetails.twoHundredDayEMADiff <= upperBound,
+    "near-upperBound0-sma": stockDetails.fiftyDaySMADiff <= upperBound,
+    "near-100-sma": stockDetails.hundredDaySMADiff <= upperBound,
+    "near-200-sma": stockDetails.twoHundredDaySMADiff <= upperBound,
     "down-75-per-from-6m-high":
       stockDetails.currentPriceExact <=
       stockDetails.sixMonthHighExact - downFromSixMonthHighPoints * 0.75,
@@ -109,4 +110,34 @@ export function getStockHighlights(stockDetails) {
       stockDetails.volumeExact / stockDetails.tenDayAverageVolumeExact >= 2,
   };
   return Object.keys(highlights).filter((item) => highlights[item]);
+}
+
+export function getConsolidatedHighlights(highlights) {
+  const impHighlights = [];
+  if (
+    highlights.includes("near-200-ema") ||
+    highlights.includes("near-200-sma")
+  ) {
+    impHighlights.push("200 MA");
+  } else if (
+    highlights.includes("near-100-ema") ||
+    highlights.includes("near-100-sma")
+  ) {
+    impHighlights.push("100 MA");
+  } else if (
+    highlights.includes("near-50-ema") ||
+    highlights.includes("near-50-sma")
+  ) {
+    impHighlights.push("50 MA");
+  }
+  if (
+    highlights.includes("down-75-per-from-6m-high") ||
+    highlights.includes("down-50-per-from-6m-high")
+  ) {
+    impHighlights.push("6M Low");
+  }
+  if (highlights.includes("vol-inc-100-per-or-more")) {
+    impHighlights.push("Volume");
+  }
+  return impHighlights;
 }

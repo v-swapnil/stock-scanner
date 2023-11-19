@@ -35,7 +35,7 @@ import {
   RefreshIcon,
 } from "@heroicons/react/outline";
 import axios from "axios";
-import { formatDate } from "@/lib/common";
+import { formatDate, getConsolidatedHighlights } from "@/lib/common";
 
 function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
   const dayChangeParsed = parseFloat(dayChange);
@@ -101,6 +101,18 @@ function MovingAverageBadge({ className, maPrice, maDiffPercentage }) {
     <BadgeDelta className={className} deltaType={deltaType}>
       {maPrice} ({maDiffPercentage}%)
     </BadgeDelta>
+  );
+}
+
+function StockHighlights({ highlights }) {
+  return (
+    <Flex justifyContent="end" className="gap-2">
+      {highlights.map((item) => (
+        <Badge key={item} color="fuchsia">
+          {item}
+        </Badge>
+      ))}
+    </Flex>
   );
 }
 
@@ -362,9 +374,9 @@ function StockDataTableCard({ data }) {
               <TableHeaderCell className="text-right">
                 EMA (50, 100 and 200)
               </TableHeaderCell>
-              {/* <TableHeaderCell className="text-right">
+              <TableHeaderCell className="text-right">
                 Highlights
-              </TableHeaderCell> */}
+              </TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -539,11 +551,11 @@ function StockDataTableCard({ data }) {
                 <TableCell className="text-right">
                   <Flex justifyContent="end">
                     <Badge color={"gray"}>{item.volume}</Badge>
-                    {item.volumeIncreasedBy && (
+                    {item.volumeIncreasedBy ? (
                       <BadgeDelta deltaType={"increase"} className="ml-2">
                         {item.volumeIncreasedBy}%
                       </BadgeDelta>
-                    )}
+                    ) : null}
                   </Flex>
                 </TableCell>
                 <TableCell className="text-right">
@@ -580,9 +592,11 @@ function StockDataTableCard({ data }) {
                     maDiffPercentage={item.twoHundredDayEMADiff}
                   />
                 </TableCell>
-                {/* <TableCell className="text-right">
-                  {item.highlights.join(", ")}
-                </TableCell> */}
+                <TableCell className="text-right">
+                  <StockHighlights
+                    highlights={getConsolidatedHighlights(item.highlights)}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
