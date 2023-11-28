@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   Table,
@@ -28,6 +28,7 @@ import {
   Select,
   SelectItem,
   Icon,
+  Grid,
 } from "@tremor/react";
 import {
   SortAscendingIcon,
@@ -36,6 +37,8 @@ import {
 } from "@heroicons/react/outline";
 import axios from "axios";
 import { formatDate, getConsolidatedHighlights } from "@/lib/common";
+import IndexInsights from "./IndexInsights";
+import { numberFormat } from "@/lib/number-format";
 
 function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
   const dayChangeParsed = parseFloat(dayChange);
@@ -123,10 +126,13 @@ function StockDataTableCard({ data }) {
   const [selectedStockIndex, setSelectedStockIndex] = useState(0);
   const [selectedChangeType, setSelectedChangeType] = useState("All");
   const [fnoStocks, setFnOStocks] = useState([]);
+  const [niftyStocks, setNiftyStocks] = useState([]);
+  const [bankNiftyStocks, setBankNiftyStocks] = useState([]);
+  const [indexData, setIndexData] = useState(null);
   const [marketNews, setMarkerNews] = useState([]);
 
   const getFnOStockList = useCallback(async () => {
-    const response = await axios.get("/api");
+    const response = await axios.get("/api/fno");
     setFnOStocks(response.data.fnoStocks || []);
   }, []);
 
@@ -135,21 +141,35 @@ function StockDataTableCard({ data }) {
     setMarkerNews(response.data.marketNews || []);
   }, []);
 
+  const getIndexData = useCallback(async () => {
+    const response = await axios.get("/api/contributors");
+    setIndexData(response.data);
+    setNiftyStocks(response.data.niftyContributorSymbols);
+    setBankNiftyStocks(response.data.bankNiftyContributorSymbols);
+  }, []);
+
   useEffect(() => {
     getFnOStockList();
-  }, [getFnOStockList, getMarketNews]);
+    getIndexData();
+  }, [getFnOStockList, getIndexData]);
 
   const onChangeStockType = useCallback(
     (newIndex) => {
       setSelectedStockIndex(newIndex);
-      const cmp = newIndex === 2 ? true : false;
+      const list =
+        newIndex === 3
+          ? niftyStocks
+          : newIndex === 4
+          ? bankNiftyStocks
+          : fnoStocks;
+      const cmp = newIndex === 1 ? false : true;
       setFiltered(
         newIndex === 0
           ? data
-          : data.filter((item) => fnoStocks.includes(item.name) === cmp)
+          : data.filter((item) => list.includes(item.name) === cmp)
       );
     },
-    [data, fnoStocks]
+    [data, fnoStocks, niftyStocks, bankNiftyStocks]
   );
 
   const onChangeMCapType = useCallback(
@@ -194,8 +214,94 @@ function StockDataTableCard({ data }) {
     );
   }, []);
 
+  const niftyContributors = useMemo(() => {
+    if (!indexData) {
+      return [];
+    }
+    const positiveContributors = indexData.niftyContributors
+      .filter((item) => item.pointchange > 0)
+      .sort((a, b) => b.pointchange - a.pointchange)
+      .slice(0, 4);
+    const negativeContributors = indexData.niftyContributors
+      .filter((item) => item.pointchange < 0)
+      .sort((a, b) => a.pointchange - b.pointchange)
+      .slice(0, 4);
+    let contributors = [];
+    if (positiveContributors.length >= negativeContributors.length) {
+      contributors = positiveContributors.map((item, index) => ({
+        // Positive Symbol
+        positiveSymbol: item.symbol,
+        positivePointChanged: item.pointchange,
+        // Negative Symbol
+        negativeSymbol: negativeContributors[index]?.symbol,
+        negativePointChanged: negativeContributors[index]?.pointchange,
+      }));
+    } else {
+      contributors = negativeContributors.map((item, index) => ({
+        // Positive Symbol
+        positiveSymbol: positiveContributors[index]?.symbol,
+        positivePointChanged: positiveContributors[index]?.pointchange,
+        // Negative Symbol
+        negativeSymbol: item.symbol,
+        negativePointChanged: item.pointchange,
+      }));
+    }
+    return contributors;
+  }, [indexData]);
+
+  const bankNiftyContributors = useMemo(() => {
+    if (!indexData) {
+      return [];
+    }
+    const positiveContributors = indexData.bankNiftyContributors
+      .filter((item) => item.pointchange > 0)
+      .sort((a, b) => b.pointchange - a.pointchange)
+      .slice(0, 4);
+    const negativeContributors = indexData.bankNiftyContributors
+      .filter((item) => item.pointchange < 0)
+      .sort((a, b) => a.pointchange - b.pointchange)
+      .slice(0, 4);
+    let contributors = [];
+    if (positiveContributors.length >= negativeContributors.length) {
+      contributors = positiveContributors.map((item, index) => ({
+        // Positive Symbol
+        positiveSymbol: item.symbol,
+        positivePointChanged: item.pointchange,
+        // Negative Symbol
+        negativeSymbol: negativeContributors[index]?.symbol,
+        negativePointChanged: negativeContributors[index]?.pointchange,
+      }));
+    } else {
+      contributors = negativeContributors.map((item, index) => ({
+        // Positive Symbol
+        positiveSymbol: positiveContributors[index]?.symbol,
+        positivePointChanged: positiveContributors[index]?.pointchange,
+        // Negative Symbol
+        negativeSymbol: item.symbol,
+        negativePointChanged: item.pointchange,
+      }));
+    }
+    return contributors;
+  }, [indexData]);
+
   return (
     <>
+      <Grid numItemsSm={2} numItemsLg={2} className="gap-6 mb-6">
+        <IndexInsights
+          title="Nifty"
+          price={numberFormat(indexData?.niftyContributors[0].NewIndexValue)}
+          pointsChanged={indexData?.niftyPointChanged}
+          contributors={niftyContributors}
+        />
+        <IndexInsights
+          title="Bank Nifty"
+          price={numberFormat(
+            indexData?.bankNiftyContributors[0].NewIndexValue
+          )}
+          pointsChanged={indexData?.bankNiftyPointChange}
+          contributors={bankNiftyContributors}
+        />
+      </Grid>
       <Card>
         <Accordion className="mb-6" defaultOpen={false}>
           <AccordionHeader>
@@ -281,6 +387,8 @@ function StockDataTableCard({ data }) {
                 <Tab>All</Tab>
                 <Tab>Cash</Tab>
                 <Tab>FnO</Tab>
+                <Tab>Nifty</Tab>
+                <Tab>Bank Nifty</Tab>
               </TabList>
             </TabGroup>
             <TabGroup index={selectMCapIndex} onIndexChange={onChangeMCapType}>
@@ -312,11 +420,15 @@ function StockDataTableCard({ data }) {
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">
+              {/* <TableHeaderCell className="text-right">
                 Pre Volume
-              </TableHeaderCell>
+              </TableHeaderCell> */}
               <TableHeaderCell className="text-right">
-                Open Change
+                <SortableColumn
+                  id="changeFromOpen"
+                  title="Open Change"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
@@ -328,15 +440,15 @@ function StockDataTableCard({ data }) {
               {/* <TableHeaderCell className="text-right">
                 Pre to Day Close
               </TableHeaderCell> */}
+              <TableHeaderCell className="text-right">
+                <SortableColumn
+                  id="weekChangeExact"
+                  title="Week Change"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
               {showPrevPerf && (
                 <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="weekChangeExact"
-                      title="Week Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="monthChangeExact"
@@ -420,9 +532,9 @@ function StockDataTableCard({ data }) {
                     {item.preMarketChange}%
                   </BadgeDelta>
                 </TableCell>
-                <TableCell className="text-right">
+                {/* <TableCell className="text-right">
                   <Badge color={"gray"}>{item.preMarketVolume}</Badge>
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="text-right">
                   <BadgeDelta
                     deltaType={
@@ -447,21 +559,21 @@ function StockDataTableCard({ data }) {
                     preMarketChange={item.preMarketChange}
                   />
                 </TableCell> */}
+                <TableCell className="text-right">
+                  <BadgeDelta
+                    deltaType={
+                      item.weekChange === 0
+                        ? "unchanged"
+                        : item.weekChange > 0
+                        ? "increase"
+                        : "decrease"
+                    }
+                  >
+                    {item.weekChange}%
+                  </BadgeDelta>
+                </TableCell>
                 {showPrevPerf && (
                   <>
-                    <TableCell className="text-right">
-                      <BadgeDelta
-                        deltaType={
-                          item.weekChange === 0
-                            ? "unchanged"
-                            : item.weekChange > 0
-                            ? "increase"
-                            : "decrease"
-                        }
-                      >
-                        {item.weekChange}%
-                      </BadgeDelta>
-                    </TableCell>
                     <TableCell className="text-right">
                       <BadgeDelta
                         deltaType={

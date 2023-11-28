@@ -13,10 +13,13 @@
     "@heroicons/react": "^1.0.6",
     "@tremor/react": "^3.10.1",
     "axios": "^1.6.0",
+    "date-fns": "^2.30.0",
+    "exceljs": "^4.4.0",
     "newsapi": "^2.4.1",
     "next": "14.0.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   },
   "devDependencies": {
     "@types/node": "^20",

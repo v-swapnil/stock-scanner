@@ -12,3 +12,8 @@ export function numberToText(number) {
     return number;
   }
 }
+
+export function numberFormat(number) {
+  const parsed = parseFloat(number?.toFixed(2));
+  return new Intl.NumberFormat("en-IN").format(parsed);
+}
