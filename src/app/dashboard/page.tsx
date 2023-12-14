@@ -1,17 +1,17 @@
-import axios from "axios";
-import { Flex } from "@tremor/react";
 import InsightCard from "@/components/InsightCard";
 import StockDataTableCard from "@/components/StockDataTableCard";
-import { numberToText } from "@/lib/number-format";
 import {
-  getChangePercentageGroup,
   getChangeGroupTypeToDeltaType,
-  toFixedNumber,
-  toFixedIntegerNumber,
+  getChangePercentageGroup,
+  getConsolidatedHighlights,
   getDiffOfPricesInPercentage,
   getStockHighlights,
-  getConsolidatedHighlights,
+  toFixedIntegerNumber,
+  toFixedNumber,
 } from "@/lib/common";
+import { numberToText } from "@/lib/number-format";
+import { Flex } from "@tremor/react";
+import axios from "axios";
 
 const availableColumns = [
   "submarket",

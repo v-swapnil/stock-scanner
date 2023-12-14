@@ -1,12 +1,12 @@
 import {
+  BadgeDelta,
+  Bold,
   Card,
-  Metric,
-  Text,
+  Flex,
   List,
   ListItem,
-  BadgeDelta,
-  Flex,
-  Bold,
+  Metric,
+  Text,
 } from "@tremor/react";
 
 export default function IndexInsights({
@@ -41,8 +41,8 @@ export default function IndexInsights({
         </Text>
       </Flex>
       <List className="mt-1">
-        {contributors.map((item) => (
-          <ListItem key={item.symbol}>
+        {contributors.map((item, index) => (
+          <ListItem key={"item-" + index}>
             <Flex justifyContent="start" className="truncate space-x-2.5">
               {item.positiveSymbol ? (
                 <>

@@ -1,48 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  Table,
-  TableRow,
-  TableCell,
-  TableHead,
-  TableHeaderCell,
-  TableBody,
-  BadgeDelta,
-  Flex,
-  Metric,
-  TabGroup,
-  TabList,
-  Tab,
-  Badge,
-  Switch,
-  Accordion,
-  AccordionHeader,
-  AccordionBody,
-  List,
-  ListItem,
-  Title,
-  Bold,
-  Text,
-  Select,
-  SelectItem,
-  Icon,
-  Grid,
-  MultiSelect,
-  MultiSelectItem,
-  CategoryBar,
-} from "@tremor/react";
+import { numberFormat } from "@/lib/number-format";
 import {
   SortAscendingIcon,
   SortDescendingIcon,
-  RefreshIcon,
 } from "@heroicons/react/outline";
+import {
+  Badge,
+  BadgeDelta,
+  Card,
+  Flex,
+  Icon,
+  Metric,
+  MultiSelect,
+  MultiSelectItem,
+  Select,
+  SelectItem,
+  Tab,
+  TabGroup,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  Text,
+} from "@tremor/react";
 import axios from "axios";
-import { formatDate } from "@/lib/common";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import IndexInsights from "./IndexInsights";
-import { numberFormat } from "@/lib/number-format";
-import { Tooltip } from "react-tooltip";
 import StockRangeBar from "./StockRangeBar";
 
 function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
@@ -141,6 +128,8 @@ function StockDataTableCard({ data }) {
   const [fnoStocks, setFnOStocks] = useState([]);
   const [niftyStocks, setNiftyStocks] = useState([]);
   const [bankNiftyStocks, setBankNiftyStocks] = useState([]);
+  const [finNiftyStocks, setFinNiftyStocks] = useState([]);
+  const [midCapNiftyStocks, setMidCapNiftyStocks] = useState([]);
   const [indexData, setIndexData] = useState(null);
   const [marketNews, setMarkerNews] = useState([]);
 
@@ -161,8 +150,10 @@ function StockDataTableCard({ data }) {
   const getIndexData = useCallback(async () => {
     const response = await axios.get("/api/contributors");
     setIndexData(response.data);
-    setNiftyStocks(response.data.niftyContributorSymbols);
-    setBankNiftyStocks(response.data.bankNiftyContributorSymbols);
+    setNiftyStocks(response.data.niftyConstituent);
+    setBankNiftyStocks(response.data.bankNiftyConstituent);
+    setFinNiftyStocks(response.data.finNiftyConstituent);
+    setMidCapNiftyStocks(response.data.midCapNiftyConstituent);
   }, []);
 
   useEffect(() => {
@@ -178,6 +169,10 @@ function StockDataTableCard({ data }) {
           ? niftyStocks
           : newStockType === "BankNifty"
           ? bankNiftyStocks
+          : newStockType === "FinNifty"
+          ? finNiftyStocks
+          : newStockType === "MidCapNifty"
+          ? midCapNiftyStocks
           : fnoStocks;
       const cmp = newStockType === "Cash" ? false : true;
       setFiltered(
@@ -186,7 +181,14 @@ function StockDataTableCard({ data }) {
           : data.filter((item) => list.includes(item.name) === cmp)
       );
     },
-    [data, fnoStocks, niftyStocks, bankNiftyStocks]
+    [
+      niftyStocks,
+      bankNiftyStocks,
+      finNiftyStocks,
+      midCapNiftyStocks,
+      fnoStocks,
+      data,
+    ]
   );
 
   const onChangeMCapType = useCallback(
@@ -338,15 +340,13 @@ function StockDataTableCard({ data }) {
       <Flex justifyContent="between">
         <IndexInsights
           title="Nifty"
-          price={numberFormat(indexData?.niftyContributors[0].NewIndexValue)}
+          price={numberFormat(indexData?.niftyPrice)}
           pointsChanged={indexData?.niftyPointChanged}
           contributors={niftyContributors}
         />
         <IndexInsights
           title="Bank Nifty"
-          price={numberFormat(
-            indexData?.bankNiftyContributors[0].NewIndexValue
-          )}
+          price={numberFormat(indexData?.bankNiftyPrice)}
           pointsChanged={indexData?.bankNiftyPointChange}
           contributors={bankNiftyContributors}
         />

@@ -2,6 +2,14 @@ export const niftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%2050.json";
 export const bankNiftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20BANK.json";
+export const finNiftyUrl =
+  "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20FINANCIAL%20SERVICES.json";
+export const midCapNiftyUrl =
+  "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20MIDCAP%20SELECT.json";
+
+function getIndexPrice(data, pointChange) {
+  return parseFloat((data[0].NewIndexValue + pointChange)?.toFixed(2));
+}
 
 export async function GET() {
   // Nifty Index Contributors
@@ -12,6 +20,16 @@ export async function GET() {
   const bankNiftyResponse = await fetch(bankNiftyUrl, { cache: "no-store" });
   const bankNiftyResponseJson = await bankNiftyResponse.json();
 
+  // Fin Nifty Index Contributors
+  const finNiftyResponse = await fetch(finNiftyUrl, { cache: "no-store" });
+  const finNiftyResponseJson = await finNiftyResponse.json();
+
+  // MidCap Nifty Index Contributors
+  const midCapNiftyResponse = await fetch(midCapNiftyUrl, {
+    cache: "no-store",
+  });
+  const midCapNiftyResponseJson = await midCapNiftyResponse.json();
+
   const niftyPointChanged = niftyResponseJson.reduce(
     (prev, item) => prev + item.pointchange,
     0
@@ -20,15 +38,38 @@ export async function GET() {
     (prev, item) => prev + item.pointchange,
     0
   );
+  const finNiftyPointChange = finNiftyResponseJson.reduce(
+    (prev, item) => prev + item.pointchange,
+    0
+  );
+  const midCapNiftyPointChange = midCapNiftyResponseJson.reduce(
+    (prev, item) => prev + item.pointchange,
+    0
+  );
 
   return Response.json({
+    // Price
+    niftyPrice: getIndexPrice(niftyResponseJson, niftyPointChanged),
+    bankNiftyPrice: getIndexPrice(bankNiftyResponseJson, bankNiftyPointChange),
+    finNiftyPrice: getIndexPrice(finNiftyResponseJson, finNiftyPointChange),
+    midCapNiftyPrice: getIndexPrice(
+      midCapNiftyResponseJson,
+      midCapNiftyPointChange
+    ),
+    // Points Changed
     niftyPointChanged: parseFloat(niftyPointChanged?.toFixed(2)),
     bankNiftyPointChange: parseFloat(bankNiftyPointChange?.toFixed(2)),
-    niftyContributorSymbols: niftyResponseJson.map((item) => item.symbol),
-    bankNiftyContributorSymbols: bankNiftyResponseJson.map(
-      (item) => item.symbol
-    ),
+    finNiftyPointChange: parseFloat(finNiftyPointChange?.toFixed(2)),
+    midCapNiftyPointChange: parseFloat(midCapNiftyPointChange?.toFixed(2)),
+    // Constituent
+    niftyConstituent: niftyResponseJson.map((item) => item.symbol),
+    bankNiftyConstituent: bankNiftyResponseJson.map((item) => item.symbol),
+    finNiftyConstituent: finNiftyResponseJson.map((item) => item.symbol),
+    midCapNiftyConstituent: midCapNiftyResponseJson.map((item) => item.symbol),
+    // Contributions
     niftyContributors: niftyResponseJson,
     bankNiftyContributors: bankNiftyResponseJson,
+    finNiftyContributors: finNiftyResponseJson,
+    midCapNiftyContributors: midCapNiftyResponseJson,
   });
 }
