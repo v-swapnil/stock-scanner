@@ -16,7 +16,7 @@ export default function IndexInsights({
   contributors,
 }) {
   return (
-    <Card className="w-[500px]">
+    <Card className="w-full m-6">
       <Flex alignItems="start">
         <Text>{title}</Text>
         <BadgeDelta

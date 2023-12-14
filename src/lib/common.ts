@@ -107,7 +107,9 @@ export function getStockHighlights(stockDetails) {
       stockDetails.currentPriceExact <=
       stockDetails.sixMonthHighExact - downFromSixMonthHighPoints * 0.5,
     "vol-inc-100-per-or-more":
-      stockDetails.volumeExact / stockDetails.tenDayAverageVolumeExact >= 2,
+      stockDetails.volumeExact / stockDetails.tenDayAverageVolumeExact >= 1.75,
+    "high-gains-6m": stockDetails.sixMonthChangeExact >= 40,
+    "low-gains-6m": stockDetails.sixMonthChangeExact <= 10,
   };
   return Object.keys(highlights).filter((item) => highlights[item]);
 }
@@ -138,6 +140,12 @@ export function getConsolidatedHighlights(highlights) {
   }
   if (highlights.includes("vol-inc-100-per-or-more")) {
     impHighlights.push("Volume");
+  }
+  if (highlights.includes("high-gains-6m")) {
+    impHighlights.push("High Gains");
+  }
+  if (highlights.includes("low-gains-6m")) {
+    impHighlights.push("Low Gains");
   }
   return impHighlights;
 }

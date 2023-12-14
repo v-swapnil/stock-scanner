@@ -17,3 +17,7 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.bg-range {
+  background: linear-gradient(90deg,#da121a,#fde642 46.88%,#078930)
+}

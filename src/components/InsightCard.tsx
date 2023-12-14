@@ -19,7 +19,7 @@ function InsightCard({ title, data }) {
   const [isSwitchOn, setIsSwitchOn] = useState(true);
 
   return (
-    <Card className="max-w-sm mx-auto m-6">
+    <Card className="m-6 w-full" >
       <Flex>
         <Metric>{title}</Metric>
         <Switch

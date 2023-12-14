@@ -19,6 +19,7 @@
     "next": "14.0.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-tooltip": "^5.24.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   },
   "devDependencies": {

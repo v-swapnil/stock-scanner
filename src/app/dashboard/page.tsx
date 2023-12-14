@@ -10,6 +10,7 @@ import {
   toFixedIntegerNumber,
   getDiffOfPricesInPercentage,
   getStockHighlights,
+  getConsolidatedHighlights,
 } from "@/lib/common";
 
 const availableColumns = [
@@ -276,7 +277,7 @@ function addStockInsights(stockDetails) {
       stockDetails.marketCapInBillions > 1000
         ? "Large"
         : stockDetails.marketCapInBillions > 500
-        ? "Medium"
+        ? "Mid"
         : "Small",
     upFromSixMonthLow: "0",
     downFromSixMonthHigh: "0",
@@ -331,6 +332,7 @@ function addStockInsights(stockDetails) {
     preMarketChangeDeltaType: getChangeGroupTypeToDeltaType(
       metrics.preMarketChangeType
     ),
+    consolidatedHighlights: getConsolidatedHighlights(metrics.highlights),
   };
 }
 
@@ -402,6 +404,7 @@ async function getStockData(searchParams) {
       "SMA50",
       "SMA100",
       "SMA200",
+      "price_earnings_ttm",
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
@@ -424,9 +427,13 @@ async function getStockData(searchParams) {
       monthChange: toFixedNumber(item.d[7]),
       monthChangeExact: item.d[7],
       threeMonthChange: toFixedNumber(item.d[8]),
+      threeMonthChangeExact: item.d[8],
       sixMonthChange: toFixedNumber(item.d[9]),
+      sixMonthChangeExact: item.d[9],
       oneYearChange: toFixedNumber(item.d[10]),
+      oneYearChangeExact: item.d[10],
       fiveYearChange: toFixedNumber(item.d[11]),
+      fiveYearChangeExact: item.d[11],
       marketCap: item.d[12],
       marketCapInBillions: item.d[12] / 1000000000,
       dayChangeType: null,
@@ -483,6 +490,8 @@ async function getStockData(searchParams) {
         item.d[39],
         1
       ),
+      priceEarningTTM: toFixedNumber(item.d[40]),
+      priceEarningTTMExact: item.d[40],
     }));
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
@@ -495,21 +504,22 @@ async function getStockData(searchParams) {
     return filteredDataItems;
   } catch (error: any) {
     if (error.response) {
+      console.error("Error getting stock data from TradingView.");
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      console.log("error.response", error.response.data);
-      console.log("error.response", error.response.status);
-      console.log("error.response", error.response.headers);
+      console.error("error.response", error.response.data);
+      console.error("error.response", error.response.status);
+      console.error("error.response", error.response.headers);
     } else if (error.request) {
       // The request was made but no response was received
       // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
       // http.ClientRequest in node.js
-      console.log("error.request", error.request);
+      console.error("error.request", error.request);
     } else {
       // Something happened in setting up the request that triggered an Error
-      console.log("Error", error.message);
+      console.error("Error", error.message);
     }
-    console.log("error.config", error.config);
+    console.error("error.config", error.config);
   }
 }
 
@@ -582,7 +592,10 @@ export default async function Home({ searchParams }) {
           data={stocksMetrics.monthChangeInsights}
         />
       </Flex>
-      <StockDataTableCard data={stocksDataItems} />
+      <StockDataTableCard
+        stocksMetrics={stocksMetrics}
+        data={stocksDataItems}
+      />
     </main>
   );
 }
