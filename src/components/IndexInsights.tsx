@@ -2,7 +2,9 @@ import {
   BadgeDelta,
   Bold,
   Card,
+  CategoryBar,
   Flex,
+  Legend,
   List,
   ListItem,
   Metric,
@@ -14,22 +16,25 @@ export default function IndexInsights({
   price,
   pointsChanged,
   contributors,
+  advanceDecline,
 }) {
   return (
     <Card className="w-full m-6">
       <Flex alignItems="start">
         <Text>{title}</Text>
-        <BadgeDelta
-          deltaType={
-            pointsChanged > 0
-              ? "increase"
-              : pointsChanged < 0
-              ? "decrease"
-              : "unchanged"
-          }
-        >
-          {pointsChanged}
-        </BadgeDelta>
+        {pointsChanged !== null && (
+          <BadgeDelta
+            deltaType={
+              pointsChanged > 0
+                ? "increase"
+                : pointsChanged < 0
+                ? "decrease"
+                : "unchanged"
+            }
+          >
+            {pointsChanged}
+          </BadgeDelta>
+        )}
       </Flex>
       <Metric>{price}</Metric>
       <Flex className="mt-6">
@@ -70,6 +75,20 @@ export default function IndexInsights({
           </ListItem>
         ))}
       </List>
+      {advanceDecline && (
+        <>
+          <CategoryBar
+            values={[advanceDecline, 100 - advanceDecline]}
+            colors={["emerald", "rose"]}
+            className="mt-4"
+          />
+          {/* <Legend
+            categories={["Advance", "Decline"]}
+            colors={["emerald", "rose"]}
+            className="mt-3"
+          /> */}
+        </>
+      )}
     </Card>
   );
 }

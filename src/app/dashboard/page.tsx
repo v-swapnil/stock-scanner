@@ -280,9 +280,13 @@ function addStockInsights(stockDetails) {
         ? "Mid"
         : "Small",
     upFromSixMonthLow: "0",
+    upFromSixMonthLowExact: 0,
     downFromSixMonthHigh: "0",
+    downFromSixMonthHighExact: 0,
     upFromOneYearLow: "0",
+    upFromOneYearLowExact: 0,
     downFromOneYearHigh: "0",
+    downFromOneYearHighExact: 0,
     highlightRed: false,
     highlight: false,
     volumeIncreasedBy: 0,
@@ -296,12 +300,12 @@ function addStockInsights(stockDetails) {
   const sixMonthHigh = parseInt(stockDetails.sixMonthHigh);
   const sixMonthLow = parseInt(stockDetails.sixMonthLow);
   if (currentPrice < sixMonthHigh && currentPrice > sixMonthLow) {
-    metrics.upFromSixMonthLow = toFixedNumber(
-      ((currentPrice - sixMonthLow) / sixMonthLow) * 100
-    );
-    metrics.downFromSixMonthHigh = toFixedNumber(
-      ((sixMonthHigh - currentPrice) / sixMonthHigh) * 100
-    );
+    const upFromLow = ((currentPrice - sixMonthLow) / sixMonthLow) * 100;
+    const downFromHigh = ((sixMonthHigh - currentPrice) / sixMonthHigh) * 100;
+    metrics.upFromSixMonthLow = toFixedNumber(upFromLow);
+    metrics.upFromSixMonthLowExact = upFromLow;
+    metrics.downFromSixMonthHigh = toFixedNumber(downFromHigh);
+    metrics.downFromSixMonthHighExact = downFromHigh;
     metrics.highlightRed =
       currentPrice <= sixMonthHigh - (sixMonthHigh - sixMonthLow) * 0.75;
     metrics.highlight =
@@ -310,12 +314,12 @@ function addStockInsights(stockDetails) {
   const oneYearHigh = parseInt(stockDetails.oneYearHigh);
   const oneYearLow = parseInt(stockDetails.oneYearLow);
   if (currentPrice < oneYearHigh && currentPrice > oneYearLow) {
-    metrics.upFromOneYearLow = toFixedNumber(
-      ((currentPrice - oneYearLow) / oneYearLow) * 100
-    );
-    metrics.downFromOneYearHigh = toFixedNumber(
-      ((oneYearHigh - currentPrice) / oneYearHigh) * 100
-    );
+    const upFromLow = ((currentPrice - oneYearLow) / oneYearLow) * 100;
+    const downFromHigh = ((oneYearHigh - currentPrice) / oneYearHigh) * 100;
+    metrics.upFromOneYearLow = toFixedNumber(upFromLow);
+    metrics.upFromOneYearLowExact = upFromLow;
+    metrics.downFromOneYearHigh = toFixedNumber(downFromHigh);
+    metrics.downFromOneYearHighExact = downFromHigh;
   }
   const volume = stockDetails.volumeExact;
   const tenDayAverageVolume = stockDetails.tenDayAverageVolumeExact;
@@ -405,6 +409,7 @@ async function getStockData(searchParams) {
       "SMA100",
       "SMA200",
       "price_earnings_ttm",
+      "industry",
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
@@ -416,7 +421,7 @@ async function getStockData(searchParams) {
     const formattedDataItems = dataItems.map((item: any) => ({
       name: item.d[0],
       description: item.d[1],
-      sector: item.d[2],
+      sector: item.d[41] || item.d[2],
       currentPrice: toFixedNumber(item.d[3]),
       currentPriceExact: item.d[3],
       dayChangeAbs: toFixedNumber(item.d[4]),

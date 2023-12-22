@@ -57,6 +57,8 @@ function FnOParticipantPositionStats() {
         buyContractAmount: numberFormat(item[2]),
         sellContracts: numberFormat(item[3]),
         sellContractsAmount: numberFormat(item[4]),
+        netContracts: numberFormat(item[1] - item[3]),
+        netContractsAmount: numberFormat(item[2] - item[4]),
         eodContacts: numberFormat(item[5]),
         eodContactsAmount: numberFormat(item[6]),
       }));
@@ -181,6 +183,12 @@ function FnOParticipantPositionStats() {
                 Sell Contracts Amount (Cr)
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
+                Net Contracts
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Net Contracts Amount (Cr)
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
                 EOD Contacts
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
@@ -210,6 +218,12 @@ function FnOParticipantPositionStats() {
                 </TableCell>
                 <TableCell className="text-right">
                   {item.sellContractsAmount}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.netContracts}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.netContractsAmount}
                 </TableCell>
                 <TableCell className="text-right">{item.eodContacts}</TableCell>
                 <TableCell className="text-right">
