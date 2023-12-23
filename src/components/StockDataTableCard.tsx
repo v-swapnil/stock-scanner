@@ -609,6 +609,11 @@ function StockDataTableCard({ data }) {
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
+              <TableHeaderCell className="text-right">P/B</TableHeaderCell>
+              <TableHeaderCell className="text-right">EPS</TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Div Yield
+              </TableHeaderCell>
               {/* <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="priceEarningTTMExact"
@@ -802,6 +807,28 @@ function StockDataTableCard({ data }) {
                     }
                   >
                     {item.priceEarningTTM}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge
+                    color={item.priceBookTTMExact <= 3 ? "emerald" : "rose"}
+                  >
+                    {item.priceBookTTM}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge color={"gray"}>
+                    {item.earningPerShareTTM
+                      ? item.earningPerShareTTM +
+                        " (" +
+                        item.earningPerShareTTMPer +
+                        "%)"
+                      : ""}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge color={"gray"}>
+                    {item.dividendYield ? item.dividendYield + "%" : ""}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
