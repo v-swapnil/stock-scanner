@@ -1,14 +1,8 @@
 "use client";
 
 import { numberFormat } from "@/lib/number-format";
-import {
-  SortAscendingIcon,
-  SortDescendingIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  ChevronUpIcon,
-  ArrowSmUpIcon,
-} from "@heroicons/react/outline";
+import { ArrowUpIcon, ArrowDownIcon, StarIcon } from "@heroicons/react/outline";
+import { StarIcon as StarIconSolid } from "@heroicons/react/solid";
 import {
   Badge,
   BadgeDelta,
@@ -139,10 +133,23 @@ function StockDataTableCard({ data }) {
   const [midCapNiftyStocks, setMidCapNiftyStocks] = useState([]);
   const [indexData, setIndexData] = useState(null);
   const [marketNews, setMarkerNews] = useState([]);
+  const [favoriteStocks, setFavoriteStocks] = useState([]);
+
+  const filteredWithFavorites = useMemo(() => {
+    return filtered.map((item) => {
+      item.isStarred = favoriteStocks.includes(item.name);
+      return item;
+    });
+  }, [filtered, favoriteStocks]);
 
   const sectors = useMemo(() => {
     return Array.from(new Set(data.map((item) => item.sector))) || [];
   }, [data]);
+
+  const getFavoriteStocks = useCallback(async () => {
+    const response = await axios.get("/api/stocks");
+    setFavoriteStocks(response.data.favorite_stocks || []);
+  }, []);
 
   const getFnOStockList = useCallback(async () => {
     const response = await axios.get("/api/fno");
@@ -164,15 +171,18 @@ function StockDataTableCard({ data }) {
   }, []);
 
   useEffect(() => {
+    getFavoriteStocks();
     getFnOStockList();
     getIndexData();
-  }, [getFnOStockList, getIndexData]);
+  }, [getFavoriteStocks, getFnOStockList, getIndexData]);
 
   const onChangeStockType = useCallback(
     (newStockType) => {
       setSelectedStockType(newStockType);
       const list =
-        newStockType === "Nifty"
+        newStockType === "Starred"
+          ? favoriteStocks
+          : newStockType === "Nifty"
           ? niftyStocks
           : newStockType === "BankNifty"
           ? bankNiftyStocks
@@ -189,6 +199,7 @@ function StockDataTableCard({ data }) {
       );
     },
     [
+      favoriteStocks,
       niftyStocks,
       bankNiftyStocks,
       finNiftyStocks,
@@ -266,6 +277,23 @@ function StockDataTableCard({ data }) {
         )
         .map((item) => item)
     );
+  }, []);
+
+  const onChangeFavorites = useCallback(async (stockData) => {
+    const response = await axios.patch("/api/stocks", {
+      stock_id: stockData.name,
+    });
+    setFavoriteStocks(response.data.favorite_stocks);
+    // setFavoriteStocks((prevFavoriteStocks) => {
+    //   const dataIndex = prevFavoriteStocks.indexOf(stockData.name);
+    //   if (dataIndex !== -1) {
+    //     prevFavoriteStocks.splice(dataIndex, 1);
+    //   } else {
+    //     prevFavoriteStocks.push(stockData.name);
+    //   }
+    //   console.log("prevFavoriteStocks", prevFavoriteStocks);
+    //   return [...prevFavoriteStocks];
+    // });
   }, []);
 
   const marketSentiment = useMemo(() => {
@@ -486,7 +514,7 @@ function StockDataTableCard({ data }) {
         </Accordion> */}
         <Flex justifyContent="between">
           <Flex className="w-[30vw]">
-            <Metric>Stocks ({filtered.length})</Metric>
+            <Metric>Stocks ({filteredWithFavorites.length})</Metric>
           </Flex>
           <Flex className="w-[70vw]" justifyContent="end">
             <MultiSelect
@@ -573,6 +601,7 @@ function StockDataTableCard({ data }) {
               className="mr-4"
             >
               <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Starred">Starred</SelectItem>
               <SelectItem value="Cash">Cash</SelectItem>
               <SelectItem value="FnO">Future and Options</SelectItem>
               <SelectItem value="Nifty">Nifty</SelectItem>
@@ -595,6 +624,13 @@ function StockDataTableCard({ data }) {
             <TableRow>
               <TableHeaderCell>Name</TableHeaderCell>
               {/* <TableHeaderCell>Sector</TableHeaderCell> */}
+              <TableHeaderCell>
+                <SortableColumn
+                  id="marketCapExact"
+                  title="Market Cap"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="currentPriceExact"
@@ -610,7 +646,7 @@ function StockDataTableCard({ data }) {
                 />
               </TableHeaderCell>
               <TableHeaderCell className="text-right">P/B</TableHeaderCell>
-              <TableHeaderCell className="text-right">EPS</TableHeaderCell>
+              {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
               <TableHeaderCell className="text-right">
                 Div Yield
               </TableHeaderCell>
@@ -624,7 +660,7 @@ function StockDataTableCard({ data }) {
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="preMarketChangeExact"
-                  title="Pre Change"
+                  title="Pre-Change"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
@@ -641,7 +677,7 @@ function StockDataTableCard({ data }) {
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="dayChangeExact"
-                  title="Day Change"
+                  title="1D Change"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
@@ -651,7 +687,7 @@ function StockDataTableCard({ data }) {
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="weekChangeExact"
-                  title="Week Change"
+                  title="1W Change"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
@@ -660,21 +696,21 @@ function StockDataTableCard({ data }) {
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="monthChangeExact"
-                      title="Month Change"
+                      title="1M Change"
                       onSortItems={onSortItems}
                     />
                   </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="threeMonthChangeExact"
-                      title="3 Month Change"
+                      title="3M Change"
                       onSortItems={onSortItems}
                     />
                   </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="sixMonthChangeExact"
-                      title="6 Month Change"
+                      title="6M Change"
                       onSortItems={onSortItems}
                     />
                   </TableHeaderCell>
@@ -685,14 +721,14 @@ function StockDataTableCard({ data }) {
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="oneYearChangeExact"
-                      title="Year Change"
+                      title="1Y Change"
                       onSortItems={onSortItems}
                     />
                   </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="fiveYearChangeExact"
-                      title="5 Year Change"
+                      title="5Y Change"
                       onSortItems={onSortItems}
                     />
                   </TableHeaderCell>
@@ -700,36 +736,18 @@ function StockDataTableCard({ data }) {
               )}
               <TableHeaderCell className="text-right">
                 <SortableColumn
-                  id="upFromSixMonthLowExact"
-                  title="Up 6M Low"
+                  id="upFromOneYearLowExact"
+                  title="Up 6M / 1Y Low"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
-                  id="downFromSixMonthHighExact"
-                  title="Down 6M High"
+                  id="downFromOneYearHighExact"
+                  title="Down 6M / 1Y High"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              {showYearlyChange && (
-                <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="upFromOneYearLowExact"
-                      title="Up 1Y Low"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="downFromOneYearHighExact"
-                      title="Down 1Y High"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                </>
-              )}
               <TableHeaderCell className="text-right">
                 Avg Volume
               </TableHeaderCell>
@@ -754,7 +772,7 @@ function StockDataTableCard({ data }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filtered.map((item) => (
+            {filteredWithFavorites.map((item, index) => (
               <TableRow
                 key={item.name}
                 className={
@@ -766,7 +784,8 @@ function StockDataTableCard({ data }) {
                 }
               >
                 <TableCell>
-                  {/* <span
+                  <Flex justifyContent="start">
+                    {/* <span
                     data-tooltip-id={item.name}
                     data-tooltip-content={item.description}
                     data-tooltip-place="top"
@@ -774,24 +793,35 @@ function StockDataTableCard({ data }) {
                     {item.name}
                   </span>
                   <Tooltip id={item.name} /> */}
-                  {item.description} ({item.name})
-                  <Badge
-                    className="ml-2"
-                    color={
-                      item.mCapType === "Large"
-                        ? "emerald"
-                        : item.mCapType === "Mid"
-                        ? "orange"
-                        : "rose"
-                    }
-                  >
-                    {item.mCapType}
-                  </Badge>
-                  {fnoStocks.includes(item.name) && (
-                    <Badge className="ml-2" color={"purple"}>
-                      FnO
+                    {/* <Badge color="indigo" className="mr-2">{index + 1}</Badge> */}
+                    {item.description} ({item.name})
+                    <Badge
+                      className="ml-2"
+                      color={
+                        item.mCapType === "Large"
+                          ? "emerald"
+                          : item.mCapType === "Mid"
+                          ? "orange"
+                          : "rose"
+                      }
+                    >
+                      {item.mCapType}
                     </Badge>
-                  )}
+                    {fnoStocks.includes(item.name) && (
+                      <Badge className="ml-2" color={"purple"}>
+                        FnO
+                      </Badge>
+                    )}
+                    <Icon
+                      className="cursor-pointer"
+                      onClick={() => onChangeFavorites(item)}
+                      icon={item.isStarred ? StarIconSolid : StarIcon}
+                      color="emerald"
+                    />
+                  </Flex>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge color={"gray"}>{item.marketCap}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge color={"gray"}>{item.currentPrice}</Badge>
@@ -816,7 +846,7 @@ function StockDataTableCard({ data }) {
                     {item.priceBookTTM}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+                {/* <TableCell className="text-right">
                   <Badge color={"gray"}>
                     {item.earningPerShareTTM
                       ? item.earningPerShareTTM +
@@ -825,9 +855,11 @@ function StockDataTableCard({ data }) {
                         "%)"
                       : ""}
                   </Badge>
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="text-right">
-                  <Badge color={"gray"}>
+                  <Badge
+                    color={item.dividendYieldExact > 6 ? "emerald" : "gray"}
+                  >
                     {item.dividendYield ? item.dividendYield + "%" : ""}
                   </Badge>
                 </TableCell>
@@ -953,26 +985,18 @@ function StockDataTableCard({ data }) {
                   <BadgeDelta deltaType="increase" className="mr-2">
                     {item.upFromSixMonthLow}%
                   </BadgeDelta>
-                </TableCell>
-                <TableCell className="text-right">
-                  <BadgeDelta deltaType="decrease">
-                    {item.downFromSixMonthHigh}%
+                  <BadgeDelta deltaType="increase">
+                    {item.upFromOneYearLow}%
                   </BadgeDelta>
                 </TableCell>
-                {showYearlyChange && (
-                  <>
-                    <TableCell className="text-right">
-                      <BadgeDelta deltaType="increase" className="mr-2">
-                        {item.upFromOneYearLow}%
-                      </BadgeDelta>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <BadgeDelta deltaType="decrease">
-                        {item.downFromOneYearHigh}%
-                      </BadgeDelta>
-                    </TableCell>
-                  </>
-                )}
+                <TableCell className="text-right">
+                  <BadgeDelta deltaType="decrease" className="mr-2">
+                    {item.downFromSixMonthHigh}%
+                  </BadgeDelta>
+                  <BadgeDelta deltaType="decrease">
+                    {item.downFromOneYearHigh}%
+                  </BadgeDelta>
+                </TableCell>
                 <TableCell className="text-right">
                   <Badge color={"gray"}>{item.tenDayAverageVolume}</Badge>
                 </TableCell>
@@ -1048,36 +1072,3 @@ function StockDataTableCard({ data }) {
 }
 
 export default StockDataTableCard;
-
-// > 40%
-// > nifty 50
-// > nifty next 50
-// > sensex
-
-// > 30%
-// > midcap 150
-// > smallcap 250
-
-// > 20%
-// > nifty bank
-// > nifty it
-// > nifty consumption
-
-// > 10%
-// > nifty auto
-// > nifty pharma
-// > nifty metal
-// > nifty realty
-// > nifty infra
-
-// 2,00,000
-// > 80,000
-// > 60,000
-// > 40,000
-// > 20,000
-
-// 1,00,000
-// > 40,000
-// > 30,000
-// > 20,000
-// > 10,000

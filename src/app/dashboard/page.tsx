@@ -341,6 +341,10 @@ function addStockInsights(stockDetails) {
 }
 
 async function getStockData(searchParams) {
+  const oneBillion = 1000000000;
+  const marketCapInBillions = searchParams.market_cap_in_billions
+    ? parseInt(searchParams.market_cap_in_billions)
+    : 75;
   const url = "https://scanner.tradingview.com/india/scan";
   const data = {
     filter: [
@@ -354,7 +358,7 @@ async function getStockData(searchParams) {
       {
         left: "market_cap_basic",
         operation: "egreater",
-        right: 100000000000,
+        right: (marketCapInBillions || 75) * oneBillion,
       },
       { left: "is_primary", operation: "equal", right: true },
       { left: "active_symbol", operation: "equal", right: true },
@@ -416,7 +420,7 @@ async function getStockData(searchParams) {
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
-    range: [0, 500],
+    range: [0, 1000],
   };
   try {
     const response = await axios.post(url, data);
@@ -442,7 +446,8 @@ async function getStockData(searchParams) {
       oneYearChangeExact: item.d[10],
       fiveYearChange: toFixedNumber(item.d[11]),
       fiveYearChangeExact: item.d[11],
-      marketCap: item.d[12],
+      marketCap: numberToText(item.d[12]),
+      marketCapExact: item.d[12],
       marketCapInBillions: item.d[12] / 1000000000,
       dayChangeType: null,
       weekChangeType: null,
