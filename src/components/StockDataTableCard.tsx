@@ -26,7 +26,14 @@ import {
   Text,
 } from "@tremor/react";
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
+import { useRouter } from "next/navigation";
 import IndexInsights from "./IndexInsights";
 import StockRangeBar from "./StockRangeBar";
 import { toFixedIntegerNumber } from "@/lib/common";
@@ -119,6 +126,9 @@ function StockHighlights({ highlights }) {
 }
 
 function StockDataTableCard({ data }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const [filtered, setFiltered] = useState(data);
   const [selectMCapIndex, setSelectedMCapIndex] = useState(0);
   const [selectedStockType, setSelectedStockType] = useState("All");
@@ -143,6 +153,10 @@ function StockDataTableCard({ data }) {
   }, [filtered, favoriteStocks]);
 
   const sectors = useMemo(() => {
+    return Array.from(new Set(data.map((item) => item.industry))) || [];
+  }, [data]);
+
+  const sectors2 = useMemo(() => {
     return Array.from(new Set(data.map((item) => item.sector))) || [];
   }, [data]);
 
@@ -252,12 +266,14 @@ function StockDataTableCard({ data }) {
   );
 
   const onChangeSector = useCallback(
-    (newSector) => {
+    (newSector, isSector) => {
       setSelectedSector(newSector);
       setFiltered(
         newSector === "All"
           ? data
-          : data.filter((item) => item.sector === newSector)
+          : data.filter((item) =>
+              isSector ? item.sector === newSector : item.industry === newSector
+            )
       );
     },
     [data]
@@ -295,6 +311,14 @@ function StockDataTableCard({ data }) {
     //   return [...prevFavoriteStocks];
     // });
   }, []);
+
+  const onRefreshData = useCallback(() => {
+    startTransition(() => {
+      // Refresh the current route and fetch new data from the server without
+      // losing client-side browser or React state.
+      router.refresh();
+    });
+  }, [router]);
 
   const marketSentiment = useMemo(() => {
     let positive = 0;
@@ -457,6 +481,8 @@ function StockDataTableCard({ data }) {
   const showYearlyChange = selectedViews.includes("YearlyChange");
   const showMovingAverages = selectedViews.includes("MA");
 
+  console.log(JSON.stringify({ sectors, sectors2 }));
+
   return (
     <>
       <Flex justifyContent="between">
@@ -466,6 +492,9 @@ function StockDataTableCard({ data }) {
           pointsChanged={null}
           contributors={marketContributors}
           advanceDecline={advanceDeclineMetric.marketAdvanceDecline}
+          canRefresh
+          isRefreshing={isPending}
+          onRefresh={onRefreshData}
         />
         <IndexInsights
           title="Nifty"
@@ -624,13 +653,6 @@ function StockDataTableCard({ data }) {
             <TableRow>
               <TableHeaderCell>Name</TableHeaderCell>
               {/* <TableHeaderCell>Sector</TableHeaderCell> */}
-              <TableHeaderCell>
-                <SortableColumn
-                  id="marketCapExact"
-                  title="Market Cap"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="currentPriceExact"
@@ -645,11 +667,14 @@ function StockDataTableCard({ data }) {
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">P/B</TableHeaderCell>
-              {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
               <TableHeaderCell className="text-right">
-                Div Yield
+                <SortableColumn
+                  id="priceBookTTMExact"
+                  title="P/B"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
+              {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
               {/* <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="priceEarningTTMExact"
@@ -691,15 +716,15 @@ function StockDataTableCard({ data }) {
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                <SortableColumn
+                  id="monthChangeExact"
+                  title="1M Change"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
               {showMonthlyChange && (
                 <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="monthChangeExact"
-                      title="1M Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
                   <TableHeaderCell className="text-right">
                     <SortableColumn
                       id="threeMonthChangeExact"
@@ -747,6 +772,16 @@ function StockDataTableCard({ data }) {
                   title="Down 6M / 1Y High"
                   onSortItems={onSortItems}
                 />
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <SortableColumn
+                  id="marketCapExact"
+                  title="Market Cap"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Div Yield
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 Avg Volume
@@ -821,9 +856,6 @@ function StockDataTableCard({ data }) {
                   </Flex>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.marketCap}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
                   <Badge color={"gray"}>{item.currentPrice}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -856,13 +888,6 @@ function StockDataTableCard({ data }) {
                       : ""}
                   </Badge>
                 </TableCell> */}
-                <TableCell className="text-right">
-                  <Badge
-                    color={item.dividendYieldExact > 6 ? "emerald" : "gray"}
-                  >
-                    {item.dividendYield ? item.dividendYield + "%" : ""}
-                  </Badge>
-                </TableCell>
                 <TableCell className="text-right">
                   <BadgeDelta deltaType={item.preMarketChangeDeltaType}>
                     {item.preMarketChange}%
@@ -908,21 +933,21 @@ function StockDataTableCard({ data }) {
                     {item.weekChange}%
                   </BadgeDelta>
                 </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta
+                    deltaType={
+                      item.monthChange === 0
+                        ? "unchanged"
+                        : item.monthChange > 0
+                        ? "increase"
+                        : "decrease"
+                    }
+                  >
+                    {item.monthChange}%
+                  </BadgeDelta>
+                </TableCell>
                 {showMonthlyChange && (
                   <>
-                    <TableCell className="text-right">
-                      <BadgeDelta
-                        deltaType={
-                          item.monthChange === 0
-                            ? "unchanged"
-                            : item.monthChange > 0
-                            ? "increase"
-                            : "decrease"
-                        }
-                      >
-                        {item.monthChange}%
-                      </BadgeDelta>
-                    </TableCell>
                     <TableCell className="text-right">
                       <BadgeDelta
                         deltaType={
@@ -998,6 +1023,16 @@ function StockDataTableCard({ data }) {
                   </BadgeDelta>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Badge color={"gray"}>{item.marketCap}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge
+                    color={item.dividendYieldExact > 6 ? "emerald" : "gray"}
+                  >
+                    {item.dividendYield ? item.dividendYield + "%" : ""}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
                   <Badge color={"gray"}>{item.tenDayAverageVolume}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
@@ -1012,7 +1047,20 @@ function StockDataTableCard({ data }) {
                   </Flex>
                 </TableCell>
                 <TableCell>
-                  <Badge color="sky">{item.sector}</Badge>
+                  <Badge
+                    className="cursor-pointer mr-2"
+                    color="sky"
+                    onClick={() => onChangeSector(item.sector, true)}
+                  >
+                    {item.sector}
+                  </Badge>
+                  <Badge
+                    className="cursor-pointer"
+                    color="sky"
+                    onClick={() => onChangeSector(item.industry)}
+                  >
+                    {item.industry}
+                  </Badge>
                 </TableCell>
                 {showMovingAverages && (
                   <>

@@ -1,10 +1,11 @@
+import { RefreshIcon } from "@heroicons/react/outline";
 import {
   BadgeDelta,
   Bold,
+  Button,
   Card,
   CategoryBar,
   Flex,
-  Legend,
   List,
   ListItem,
   Metric,
@@ -17,6 +18,9 @@ export default function IndexInsights({
   pointsChanged,
   contributors,
   advanceDecline,
+  canRefresh,
+  isRefreshing,
+  onRefresh,
 }) {
   return (
     <Card className="w-full m-6">
@@ -34,6 +38,15 @@ export default function IndexInsights({
           >
             {pointsChanged}
           </BadgeDelta>
+        )}
+        {canRefresh && (
+          <Button
+            variant="light"
+            disabled={isRefreshing}
+            icon={RefreshIcon}
+            onClick={onRefresh}
+            tooltip="Refresh Data"
+          />
         )}
       </Flex>
       <Metric>{price}</Metric>

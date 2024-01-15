@@ -417,6 +417,7 @@ async function getStockData(searchParams) {
       "price_book_ratio",
       "earnings_per_share_basic_ttm",
       "dividend_yield_recent",
+      "sector",
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
@@ -428,7 +429,8 @@ async function getStockData(searchParams) {
     const formattedDataItems = dataItems.map((item: any) => ({
       name: item.d[0],
       description: item.d[1],
-      sector: item.d[2],
+      sector: item.d[44],
+      industry: item.d[2],
       currentPrice: toFixedNumber(item.d[3]),
       currentPriceExact: item.d[3],
       dayChangeAbs: toFixedNumber(item.d[4]),
