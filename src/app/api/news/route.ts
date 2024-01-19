@@ -1,4 +1,4 @@
-export async function GET() {
+async function handler() {
   // Get Market News
   const newsUrl =
     "https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey=adafeceb1ef6489b909fb586e919b43c";
@@ -7,4 +7,13 @@ export async function GET() {
   return Response.json({
     marketNews: newsResponseJson.articles,
   });
+}
+
+export async function GET() {
+  try {
+    const result = await handler();
+    return result;
+  } catch (err) {
+    return Response.json({});
+  }
 }

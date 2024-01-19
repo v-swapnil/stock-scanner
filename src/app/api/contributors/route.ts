@@ -11,7 +11,7 @@ function getIndexPrice(data, pointChange) {
   return parseFloat((data[0].NewIndexValue + pointChange)?.toFixed(2));
 }
 
-export async function GET() {
+async function handler() {
   // Nifty Index Contributors
   const niftyResponse = await fetch(niftyUrl, { cache: "no-store" });
   const niftyResponseJson = await niftyResponse.json();
@@ -72,4 +72,13 @@ export async function GET() {
     finNiftyContributors: finNiftyResponseJson,
     midCapNiftyContributors: midCapNiftyResponseJson,
   });
+}
+
+export async function GET() {
+  try {
+    const result = await handler();
+    return result;
+  } catch (err) {
+    return Response.json({});
+  }
 }

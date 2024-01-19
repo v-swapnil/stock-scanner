@@ -35,7 +35,7 @@ function removeNullValues(arr: Array<any>) {
   return arr?.filter((item) => !!item);
 }
 
-export async function GET(request: Request) {
+async function handler(request) {
   const requestUrl = new URL(request.url);
   const statsDate = requestUrl.searchParams.get("stats_date") || Date.now();
 
@@ -75,4 +75,13 @@ export async function GET(request: Request) {
     otherHeader: result.header,
     otherDataItems: result.dataItems,
   });
+}
+
+export async function GET(request: Request) {
+  try {
+    const result = await handler(request);
+    return result;
+  } catch (err) {
+    return Response.json({});
+  }
 }
