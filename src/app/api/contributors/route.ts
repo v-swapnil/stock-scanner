@@ -1,10 +1,10 @@
-export const niftyUrl =
+const niftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%2050.json";
-export const bankNiftyUrl =
+const bankNiftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20BANK.json";
-export const finNiftyUrl =
+const finNiftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20FINANCIAL%20SERVICES.json";
-export const midCapNiftyUrl =
+const midCapNiftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20MIDCAP%20SELECT.json";
 
 function getIndexPrice(data, pointChange) {
