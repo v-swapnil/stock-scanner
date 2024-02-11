@@ -149,3 +149,7 @@ export function getConsolidatedHighlights(highlights) {
   }
   return impHighlights;
 }
+
+export function getSearchTerms(stockDetails) {
+  return `${stockDetails.name.toLowerCase()}:${stockDetails.description.toLowerCase()}:${stockDetails.sector.toLowerCase()}:${stockDetails.industry.toLowerCase()}`;
+}

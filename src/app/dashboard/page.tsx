@@ -8,6 +8,7 @@ import {
   getStockHighlights,
   toFixedIntegerNumber,
   toFixedNumber,
+  getSearchTerms,
 } from "@/lib/common";
 import { numberToText } from "@/lib/number-format";
 import { Flex } from "@tremor/react";
@@ -337,6 +338,7 @@ function addStockInsights(stockDetails) {
       metrics.preMarketChangeType
     ),
     consolidatedHighlights: getConsolidatedHighlights(metrics.highlights),
+    searchTerms: getSearchTerms(stockDetails),
   };
 }
 

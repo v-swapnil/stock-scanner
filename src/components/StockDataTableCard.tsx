@@ -1,18 +1,11 @@
 "use client";
 
 import { numberFormat } from "@/lib/number-format";
+import { RiSearchLine } from "@remixicon/react";
 import {
-  RiStarLine,
-  RiStarFill,
-  RiSortNumberAsc,
-  RiSortNumberDesc,
-} from "@remixicon/react";
-import {
-  Badge,
   BadgeDelta,
   Card,
   Flex,
-  Icon,
   Metric,
   MultiSelect,
   MultiSelectItem,
@@ -21,13 +14,7 @@ import {
   Tab,
   TabGroup,
   TabList,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeaderCell,
-  TableRow,
-  Text,
+  TextInput,
 } from "@tremor/react";
 import axios from "axios";
 import {
@@ -39,13 +26,12 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import IndexInsights from "./IndexInsights";
-import StockRangeBar from "./StockRangeBar";
 import { toFixedIntegerNumber } from "@/lib/common";
+import StockDataTable from "./StockDataTable";
 
 function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
   const dayChangeParsed = parseFloat(dayChange);
   const preMarketChangeParsed = parseFloat(preMarketChange);
-
   let deltaType = "unchanged";
   let deltaText = "";
   if (preMarketChangeParsed < 0) {
@@ -65,68 +51,7 @@ function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
       deltaText = "Further Increased";
     }
   }
-
   return <BadgeDelta deltaType={deltaType}>{deltaText}</BadgeDelta>;
-}
-
-function SortableColumn({ id, title, onSortItems }) {
-  const [sortDirection, setSortDirection] = useState("asc");
-
-  const onChangeSort = useCallback(() => {
-    const newSortDirection = sortDirection === "asc" ? "desc" : "asc";
-    setSortDirection(newSortDirection);
-    onSortItems(id, newSortDirection);
-  }, [id, sortDirection, onSortItems]);
-
-  return (
-    <Flex justifyContent="end">
-      <Text>{title}</Text>
-      <Icon
-        size="sm"
-        icon={sortDirection === "desc" ? RiSortNumberDesc : RiSortNumberAsc}
-        // color={sortDirection === "desc" ? "emerald" : "rose"}
-        color="gray"
-        variant="simple"
-        tooltip={
-          "Sort " + (sortDirection === "asc" ? "Descending" : "Ascending")
-        }
-        className="ml-2 p-0 cursor-pointer"
-        onClick={onChangeSort}
-      />
-    </Flex>
-  );
-}
-
-function MovingAverageBadge({ className, maPrice, maDiffPercentage }) {
-  const deltaType =
-    maDiffPercentage < 0.5 && maDiffPercentage > -0.5
-      ? "unchanged"
-      : maDiffPercentage >= 0.5
-      ? "increase"
-      : "decrease";
-  return (
-    <BadgeDelta className={className} deltaType={deltaType}>
-      {maPrice} ({maDiffPercentage}%)
-    </BadgeDelta>
-  );
-}
-
-function StockHighlights({ highlights }) {
-  const skip = ["Low Gains", "High Gains"];
-  return (
-    <Flex justifyContent="end" className="gap-2">
-      {highlights.map((item) => {
-        if (skip.includes(item)) {
-          return null;
-        }
-        return (
-          <Badge key={item} color="fuchsia">
-            {item}
-          </Badge>
-        );
-      })}
-    </Flex>
-  );
 }
 
 function StockDataTableCard({ data }) {
@@ -148,6 +73,9 @@ function StockDataTableCard({ data }) {
   const [indexData, setIndexData] = useState(null);
   const [marketNews, setMarkerNews] = useState([]);
   const [favoriteStocks, setFavoriteStocks] = useState([]);
+
+  const [searchType, setSearchType] = useState("All");
+  const [searchText, setSearchText] = useState("");
 
   const filteredWithFavorites = useMemo(() => {
     return filtered.map((item) => {
@@ -201,8 +129,8 @@ function StockDataTableCard({ data }) {
 
   useEffect(() => {
     getFavoriteStocks();
-    getFnOStockList();
-    getIndexData();
+    // getFnOStockList();
+    // getIndexData();
   }, [getFavoriteStocks, getFnOStockList, getIndexData]);
 
   const onChangeStockType = useCallback(
@@ -326,6 +254,21 @@ function StockDataTableCard({ data }) {
     //   return [...prevFavoriteStocks];
     // });
   }, []);
+
+  const onChangeSearchText = useCallback((newText) => {
+    setSearchText(newText ? newText.toLowerCase() : "");
+  }, []);
+
+  useEffect(() => {
+    if (!searchText) {
+      setFiltered(data);
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      setFiltered(data.filter((item) => item.searchTerms.includes(searchText)));
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [data, searchText]);
 
   const onRefreshData = useCallback(() => {
     startTransition(() => {
@@ -568,12 +511,8 @@ function StockDataTableCard({ data }) {
           <Flex className="w-[30vw]">
             <Metric>Stocks ({filteredWithFavorites.length})</Metric>
           </Flex>
-          <Flex className="w-[70vw]" justifyContent="end">
-            <MultiSelect
-              value={selectedViews}
-              onValueChange={onChangeViews}
-              className="mr-4"
-            >
+          <Flex className="w-[70vw] gap-2" justifyContent="end">
+            <MultiSelect value={selectedViews} onValueChange={onChangeViews}>
               <MultiSelectItem value="Basic">Basic</MultiSelectItem>
               <MultiSelectItem value="Fundamentals">
                 Fundamentals
@@ -590,7 +529,6 @@ function StockDataTableCard({ data }) {
               value={selectedChangeType}
               onValueChange={onChangeDayChangeType}
               enableClear={false}
-              className="flex mr-4"
             >
               <SelectItem value="All">All</SelectItem>
               <SelectItem value="Crazy Selling">
@@ -626,7 +564,6 @@ function StockDataTableCard({ data }) {
               value={selectedHighlight}
               onValueChange={onChangeHighlight}
               enableClear={false}
-              className="mr-4"
             >
               <SelectItem value="All">All</SelectItem>
               <SelectItem value="200 MA">200 MA</SelectItem>
@@ -640,7 +577,6 @@ function StockDataTableCard({ data }) {
               value={selectedSector}
               onValueChange={onChangeSector}
               enableClear={false}
-              className="mr-4"
             >
               <SelectItem value="All">All</SelectItem>
               {sectors.map((item) => (
@@ -653,7 +589,6 @@ function StockDataTableCard({ data }) {
               value={selectedStockType}
               onValueChange={onChangeStockType}
               enableClear={false}
-              className="mr-4"
             >
               <SelectItem value="All">All</SelectItem>
               <SelectItem value="Starred">Starred</SelectItem>
@@ -674,547 +609,38 @@ function StockDataTableCard({ data }) {
             </TabGroup>
           </Flex>
         </Flex>
-        <Table className="mt-4">
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-              {/* <TableHeaderCell>Sector</TableHeaderCell> */}
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="currentPriceExact"
-                  title="Price"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="priceEarningTTMExact"
-                  title="PE"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              {showFundamentals && (
-                <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="priceEarningGrowthExact"
-                      title="PEG"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="priceBookTTMExact"
-                      title="PB"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="dividendYieldExact"
-                      title="Div Yield"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                  {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
-                  <TableHeaderCell className="text-right">
-                    EPS (Diluted)
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    Revenue
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">ROE</TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="preMarketChangeExact"
-                      title="Pre-Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                </>
-              )}
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="preMarketChangeExact"
-                  title="Pre-CG"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              {/* <TableHeaderCell className="text-right">
-                Pre Volume
-              </TableHeaderCell> */}
-              {/* <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="changeFromOpen"
-                  title="Open Change"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell> */}
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="dayChangeExact"
-                  title="1D-CG"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              {/* <TableHeaderCell className="text-right">
-                Pre to Day Close
-              </TableHeaderCell> */}
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="weekChangeExact"
-                  title="1W-CG"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="monthChangeExact"
-                  title="1M-CG"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="threeMonthChangeExact"
-                  title="3M-CG"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              {showMonthlyChange && (
-                <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="sixMonthChangeExact"
-                      title="6M Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                </>
-              )}
-              {showYearlyChange && (
-                <>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="oneYearChangeExact"
-                      title="1Y Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    <SortableColumn
-                      id="fiveYearChangeExact"
-                      title="5Y Change"
-                      onSortItems={onSortItems}
-                    />
-                  </TableHeaderCell>
-                </>
-              )}
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="upFromOneYearLowExact"
-                  title="Up 6M / 1Y Low"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="downFromOneYearHighExact"
-                  title="Down 6M / 1Y High"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <SortableColumn
-                  id="marketCapExact"
-                  title="MCap"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                Avg Volume
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">Volume</TableHeaderCell>
-              <TableHeaderCell>Sector</TableHeaderCell>
-              {showMovingAverages && (
-                <>
-                  <TableHeaderCell className="text-right">
-                    SMA (50, 100 and 200)
-                  </TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    EMA (50, 100 and 200)
-                  </TableHeaderCell>
-                </>
-              )}
-              <TableHeaderCell className="text-right">
-                Highlights
-              </TableHeaderCell>
-              <TableHeaderCell>Day Range</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredWithFavorites.map((item, index) => (
-              <TableRow key={item.name}>
-                <TableCell>
-                  <Flex justifyContent="start">
-                    {/* <span
-                    data-tooltip-id={item.name}
-                    data-tooltip-content={item.description}
-                    data-tooltip-place="top"
-                  >
-                    {item.name}
-                  </span>
-                  <Tooltip id={item.name} /> */}
-                    {/* <Badge color="indigo" className="mr-2">{index + 1}</Badge> */}
-                    {item.description} ({item.name})
-                    <Badge
-                      className="ml-2"
-                      color={
-                        item.mCapType === "Large"
-                          ? "emerald"
-                          : item.mCapType === "Mid"
-                          ? "orange"
-                          : "rose"
-                      }
-                    >
-                      {item.mCapType}
-                    </Badge>
-                    {item.isFnO && (
-                      <Badge className="ml-2" color={"purple"}>
-                        FnO
-                      </Badge>
-                    )}
-                    {item.isIndex && (
-                      <Badge className="ml-2" color={"cyan"}>
-                        Index
-                      </Badge>
-                    )}
-                    <Icon
-                      className="cursor-pointer"
-                      onClick={() => onChangeFavorites(item)}
-                      icon={item.isStarred ? RiStarFill : RiStarLine}
-                      color="emerald"
-                    />
-                  </Flex>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.currentPrice}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.priceEarningTTMExact <= 25
-                        ? "emerald"
-                        : item.priceEarningTTMExact >= 75
-                        ? "rose"
-                        : "orange"
-                    }
-                  >
-                    {item.priceEarningTTM}
-                  </Badge>
-                </TableCell>
-                {showFundamentals && (
-                  <>
-                    <TableCell className="text-right">
-                      <Badge
-                        color={
-                          item.priceEarningGrowth <= 2 ? "emerald" : "rose"
-                        }
-                      >
-                        {item.priceEarningGrowth}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        color={item.priceBookTTMExact <= 3 ? "emerald" : "rose"}
-                      >
-                        {item.priceBookTTM}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        color={
-                          item.dividendYield >= 8
-                            ? "emerald"
-                            : item.dividendYield >= 4
-                            ? "orange"
-                            : "rose"
-                        }
-                      >
-                        {item.dividendYield ? item.dividendYield + "%" : ""}
-                      </Badge>
-                    </TableCell>
-                    {/* <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.earningPerShareTTM}</Badge>
-                </TableCell> */}
-                    <TableCell className="text-right">
-                      <Badge
-                        color={
-                          item.earningPerShareDilutedTTMGrowthExact >= 10
-                            ? "emerald"
-                            : item.earningPerShareDilutedTTMGrowthExact >= 0
-                            ? "orange"
-                            : "rose"
-                        }
-                      >
-                        {item.earningPerShareDilutedTTM}
-                        {item.earningPerShareDilutedTTMGrowth
-                          ? " (" + item.earningPerShareDilutedTTMGrowth + "%)"
-                          : ""}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        color={
-                          item.totalRevenueGrowthTTMExact >= 15
-                            ? "emerald"
-                            : item.totalRevenueGrowthTTMExact >= 0
-                            ? "orange"
-                            : "rose"
-                        }
-                      >
-                        {item.totalRevenueGrowthTTM
-                          ? item.totalRevenueGrowthTTM + "%"
-                          : ""}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        color={
-                          item.returnOnEquityExact >= 15
-                            ? "emerald"
-                            : item.returnOnEquityExact >= 0
-                            ? "orange"
-                            : "rose"
-                        }
-                      >
-                        {item.returnOnEquity ? item.returnOnEquity + "%" : ""}
-                      </Badge>
-                    </TableCell>
-                  </>
-                )}
-                <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={item.preMarketChangeDeltaType}
-                    isIncreasePositive={true}
-                  >
-                    {item.preMarketChange}%
-                  </BadgeDelta>
-                </TableCell>
-                {/* <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.preMarketVolume}</Badge>
-                </TableCell> */}
-                {/* <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.changeFromOpen === 0
-                        ? "unchanged"
-                        : item.changeFromOpen > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.changeFromOpen}%
-                  </BadgeDelta>
-                </TableCell> */}
-                <TableCell className="text-right">
-                  <BadgeDelta deltaType={item.dayChangeDeltaType}>
-                    {item.dayChange}%
-                  </BadgeDelta>
-                </TableCell>
-                {/* <TableCell className="text-right">
-                  <PreToDayChangeMetrics
-                    dayChange={item.dayChange}
-                    preMarketChange={item.preMarketChange}
-                  />
-                </TableCell> */}
-                <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.weekChange === 0
-                        ? "unchanged"
-                        : item.weekChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.weekChange}%
-                  </BadgeDelta>
-                </TableCell>
-                <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.monthChange === 0
-                        ? "unchanged"
-                        : item.monthChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.monthChange}%
-                  </BadgeDelta>
-                </TableCell>
-                <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.threeMonthChange === 0
-                        ? "unchanged"
-                        : item.threeMonthChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.threeMonthChange}%
-                  </BadgeDelta>
-                </TableCell>
-                {showMonthlyChange && (
-                  <>
-                    <TableCell className="text-right">
-                      <BadgeDelta
-                        deltaType={
-                          item.sixMonthChange === 0
-                            ? "unchanged"
-                            : item.sixMonthChange > 0
-                            ? "increase"
-                            : "decrease"
-                        }
-                      >
-                        {item.sixMonthChange}%
-                      </BadgeDelta>
-                    </TableCell>
-                  </>
-                )}
-                {showYearlyChange && (
-                  <>
-                    <TableCell className="text-right">
-                      <BadgeDelta
-                        deltaType={
-                          item.oneYearChange === 0
-                            ? "unchanged"
-                            : item.oneYearChange > 0
-                            ? "increase"
-                            : "decrease"
-                        }
-                      >
-                        {item.oneYearChange}%
-                      </BadgeDelta>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <BadgeDelta
-                        deltaType={
-                          item.fiveYearChange === 0
-                            ? "unchanged"
-                            : item.fiveYearChange > 0
-                            ? "increase"
-                            : "decrease"
-                        }
-                      >
-                        {item.fiveYearChange}%
-                      </BadgeDelta>
-                    </TableCell>
-                  </>
-                )}
-                <TableCell className="text-right">
-                  <BadgeDelta deltaType="increase" className="mr-2">
-                    {item.upFromSixMonthLow}%
-                  </BadgeDelta>
-                  <BadgeDelta deltaType="increase">
-                    {item.upFromOneYearLow}%
-                  </BadgeDelta>
-                </TableCell>
-                <TableCell className="text-right">
-                  <BadgeDelta deltaType="decrease" className="mr-2">
-                    {item.downFromSixMonthHigh}%
-                  </BadgeDelta>
-                  <BadgeDelta deltaType="decrease">
-                    {item.downFromOneYearHigh}%
-                  </BadgeDelta>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.marketCap}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.tenDayAverageVolume}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Flex justifyContent="end">
-                    {item.volumeIncreasedBy ? (
-                      <BadgeDelta deltaType={"increase"}>
-                        {item.volume} ({item.volumeIncreasedBy}%)
-                      </BadgeDelta>
-                    ) : (
-                      <Badge color={"gray"}>{item.volume}</Badge>
-                    )}
-                  </Flex>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className="cursor-pointer mr-2"
-                    color="sky"
-                    onClick={() => onChangeSector(item.sector, true)}
-                  >
-                    {item.sector}
-                  </Badge>
-                  <Badge
-                    className="cursor-pointer"
-                    color="sky"
-                    onClick={() => onChangeSector(item.industry)}
-                  >
-                    {item.industry}
-                  </Badge>
-                </TableCell>
-                {showMovingAverages && (
-                  <>
-                    <TableCell className="text-right">
-                      <MovingAverageBadge
-                        className="mr-2"
-                        maPrice={item.fiftyDaySMA}
-                        maDiffPercentage={item.fiftyDaySMADiff}
-                      />
-                      <MovingAverageBadge
-                        className="mr-2"
-                        maPrice={item.hundredDaySMA}
-                        maDiffPercentage={item.hundredDaySMADiff}
-                      />
-                      <MovingAverageBadge
-                        className=""
-                        maPrice={item.twoHundredDaySMA}
-                        maDiffPercentage={item.twoHundredDaySMADiff}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <MovingAverageBadge
-                        className="mr-2"
-                        maPrice={item.fiftyDayEMA}
-                        maDiffPercentage={item.fiftyDayEMADiff}
-                      />
-                      <MovingAverageBadge
-                        className="mr-2"
-                        maPrice={item.hundredDayEMA}
-                        maDiffPercentage={item.hundredDayEMADiff}
-                      />
-                      <MovingAverageBadge
-                        className=""
-                        maPrice={item.twoHundredDayEMA}
-                        maDiffPercentage={item.twoHundredDayEMADiff}
-                      />
-                    </TableCell>
-                  </>
-                )}
-                <TableCell className="text-right">
-                  <StockHighlights highlights={item.consolidatedHighlights} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <StockRangeBar
-                    low={item.low}
-                    high={item.high}
-                    current={item.currentPriceExact}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Flex className="mt-4 gap-4">
+          <div className="w-48">
+            <Select
+              value={searchType}
+              onValueChange={(newType) => setSearchType(newType)}
+              enableClear={false}
+            >
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="Symbol">Symbol</SelectItem>
+              <SelectItem value="Name">Name</SelectItem>
+              <SelectItem value="Sector">Sector</SelectItem>
+              <SelectItem value="Industry">Industry</SelectItem>
+            </Select>
+          </div>
+          <TextInput
+            icon={RiSearchLine}
+            placeholder="Search..."
+            value={searchText}
+            onValueChange={onChangeSearchText}
+          />
+        </Flex>
+        <StockDataTable
+          filteredWithFavorites={filteredWithFavorites}
+          showFundamentals={showFundamentals}
+          showMonthlyChange={showMonthlyChange}
+          showYearlyChange={showYearlyChange}
+          showMovingAverages={showMovingAverages}
+          // functions
+          onSortItems={onSortItems}
+          onChangeSector={onChangeSector}
+          onChangeFavorites={onChangeFavorites}
+        />
       </Card>
     </>
   );
