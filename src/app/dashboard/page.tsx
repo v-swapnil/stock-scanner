@@ -418,6 +418,11 @@ async function getStockData(searchParams) {
       "earnings_per_share_basic_ttm",
       "dividend_yield_recent",
       "sector",
+      "price_earnings_growth_ttm",
+      "earnings_per_share_diluted_ttm",
+      "earnings_per_share_diluted_yoy_growth_ttm",
+      "total_revenue_yoy_growth_ttm",
+      "return_on_equity",
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
@@ -515,6 +520,16 @@ async function getStockData(searchParams) {
       earningPerShareTTMPerExact: (item.d[42] / item.d[3]) * 100,
       dividendYield: toFixedNumber(item.d[43]),
       dividendYieldExact: item.d[43],
+      priceEarningGrowth: toFixedNumber(item.d[45]),
+      priceEarningGrowthExact: item.d[45],
+      earningPerShareDilutedTTM: toFixedNumber(item.d[46]),
+      earningPerShareDilutedTTMExact: item.d[46],
+      earningPerShareDilutedTTMGrowth: toFixedNumber(item.d[47]),
+      earningPerShareDilutedTTMGrowthExact: item.d[47],
+      totalRevenueGrowthTTM: toFixedNumber(item.d[48]),
+      totalRevenueGrowthTTMExact: item.d[48],
+      returnOnEquity: toFixedNumber(item.d[49]),
+      returnOnEquityExact: item.d[49],
     }));
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
@@ -604,7 +619,7 @@ export default async function Home({ searchParams }) {
   const stocksMetrics = getMetricsFromStockData(stocksDataItems);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
-      <Flex>
+      <Flex className="px-2">
         <InsightCard title="Day Change" data={stocksMetrics.changeInsights} />
         <InsightCard
           title="Week Change"

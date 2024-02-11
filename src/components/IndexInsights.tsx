@@ -1,4 +1,4 @@
-import { RefreshIcon } from "@heroicons/react/outline";
+import { RiRefreshLine } from "@remixicon/react";
 import {
   BadgeDelta,
   Bold,
@@ -23,7 +23,7 @@ export default function IndexInsights({
   onRefresh,
 }) {
   return (
-    <Card className="w-full m-6">
+    <Card className="w-full m-4">
       <Flex alignItems="start">
         <Text>{title}</Text>
         {pointsChanged !== null && (
@@ -43,7 +43,7 @@ export default function IndexInsights({
           <Button
             variant="light"
             disabled={isRefreshing}
-            icon={RefreshIcon}
+            icon={RiRefreshLine}
             onClick={onRefresh}
             tooltip="Refresh Data"
           />

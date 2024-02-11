@@ -17,7 +17,7 @@ import {
 } from "@tremor/react";
 import axios from "axios";
 import { numberFormat } from "@/lib/number-format";
-import { ExclamationIcon, ExclamationCircleIcon } from "@heroicons/react/solid";
+import { RiErrorWarningLine } from "@remixicon/react";
 
 function FnOParticipantPositionStats() {
   const [errorMessage, setErrorMessage] = useState(null);
@@ -31,6 +31,9 @@ function FnOParticipantPositionStats() {
       const statsUrl =
         "/api/nse-stats?stats_date=" + selectedDate.toISOString();
       const response = await axios.get(statsUrl);
+      if (response.data.type === "error") {
+        throw new Error(response.data.message);
+      }
       const dataItems = response.data.dataItems || [];
       const formattedDateItems = dataItems.map((item) => ({
         clientType: item[0],
@@ -76,14 +79,16 @@ function FnOParticipantPositionStats() {
   }, [getStats]);
 
   return (
-    <Card className="w-full mb-6">
+    <Card className="w-full mb-4">
       {errorMessage && (
         <Callout
           className="mb-4"
-          title={errorMessage}
+          title="Data Error"
           color="rose"
-          icon={ExclamationCircleIcon}
-        />
+          icon={RiErrorWarningLine}
+        >
+          There was an error in api call - {errorMessage}
+        </Callout>
       )}
       <Flex>
         <DatePicker
@@ -199,7 +204,7 @@ function FnOParticipantPositionStats() {
           <TableBody>
             {otherDataItems.length === 0 && (
               <TableRow>
-                <TableCell className="text-center" colSpan={7}>
+                <TableCell className="text-center" colSpan={9}>
                   No data to show
                 </TableCell>
               </TableRow>

@@ -82,6 +82,6 @@ export async function GET(request: Request) {
     const result = await handler(request);
     return result;
   } catch (err) {
-    return Response.json({});
+    return Response.json({ type: "error", message: err.message });
   }
 }
