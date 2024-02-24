@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import {
   Card,
   DatePicker,
@@ -18,12 +18,20 @@ import {
 import axios from "axios";
 import { numberFormat } from "@/lib/number-format";
 import { RiErrorWarningLine } from "@remixicon/react";
+import {
+  TFnOParticipantsOpenInterest,
+  TForeignInstitutionsStats,
+} from "@/lib/types";
 
 function FnOParticipantPositionStats() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [toggle, setToggle] = useState(false);
-  const [dataItems, setDataItems] = useState([]);
-  const [otherDataItems, setOtherDataItems] = useState([]);
+  const [dataItems, setDataItems] = useState<
+    Array<TFnOParticipantsOpenInterest>
+  >([]);
+  const [otherDataItems, setOtherDataItems] = useState<
+    Array<TForeignInstitutionsStats>
+  >([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   const getStats = useCallback(async () => {
@@ -34,37 +42,39 @@ function FnOParticipantPositionStats() {
       if (response.data.type === "error") {
         throw new Error(response.data.message);
       }
-      const dataItems = response.data.dataItems || [];
-      const formattedDateItems = dataItems.map((item) => ({
-        clientType: item[0],
-        futureIndexLong: numberFormat(item[1]),
-        futureIndexShort: numberFormat(item[2]),
-        futureStockLong: numberFormat(item[3]),
-        futureStockShort: numberFormat(item[4]),
-        optionIndexCallLong: numberFormat(item[5]),
-        optionIndexPutLong: numberFormat(item[6]),
-        optionIndexCallShort: numberFormat(item[7]),
-        optionIndexPutShort: numberFormat(item[8]),
-        optionStockCallLong: numberFormat(item[9]),
-        optionStockPutLong: numberFormat(item[10]),
-        optionStockCallShort: numberFormat(item[11]),
-        optionStockPutShort: numberFormat(item[12]),
-        totalLong: numberFormat(item[13]),
-        totalShort: numberFormat(item[14]),
-      }));
+      const dataItems: Array<any> = response.data.dataItems || [];
+      const formattedDateItems: Array<TFnOParticipantsOpenInterest> =
+        dataItems.map((item) => ({
+          clientType: item[0],
+          futureIndexLong: numberFormat(item[1]),
+          futureIndexShort: numberFormat(item[2]),
+          futureStockLong: numberFormat(item[3]),
+          futureStockShort: numberFormat(item[4]),
+          optionIndexCallLong: numberFormat(item[5]),
+          optionIndexPutLong: numberFormat(item[6]),
+          optionIndexCallShort: numberFormat(item[7]),
+          optionIndexPutShort: numberFormat(item[8]),
+          optionStockCallLong: numberFormat(item[9]),
+          optionStockPutLong: numberFormat(item[10]),
+          optionStockCallShort: numberFormat(item[11]),
+          optionStockPutShort: numberFormat(item[12]),
+          totalLong: numberFormat(item[13]),
+          totalShort: numberFormat(item[14]),
+        }));
       setDataItems(formattedDateItems);
-      const otherDataItems = response.data.otherDataItems || [];
-      const formattedOtherDateItems = otherDataItems.map((item) => ({
-        type: item[0],
-        buyContracts: numberFormat(item[1]),
-        buyContractAmount: numberFormat(item[2]),
-        sellContracts: numberFormat(item[3]),
-        sellContractsAmount: numberFormat(item[4]),
-        netContracts: numberFormat(item[1] - item[3]),
-        netContractsAmount: numberFormat(item[2] - item[4]),
-        eodContacts: numberFormat(item[5]),
-        eodContactsAmount: numberFormat(item[6]),
-      }));
+      const otherDataItems: Array<any> = response.data.otherDataItems || [];
+      const formattedOtherDateItems: Array<TForeignInstitutionsStats> =
+        otherDataItems.map((item) => ({
+          type: item[0],
+          buyContracts: numberFormat(item[1]),
+          buyContractAmount: numberFormat(item[2]),
+          sellContracts: numberFormat(item[3]),
+          sellContractsAmount: numberFormat(item[4]),
+          netContracts: numberFormat(item[1] - item[3]),
+          netContractsAmount: numberFormat(item[2] - item[4]),
+          eodContacts: numberFormat(item[5]),
+          eodContactsAmount: numberFormat(item[6]),
+        }));
       setOtherDataItems(formattedOtherDateItems);
       setErrorMessage(null);
     }
@@ -243,4 +253,4 @@ function FnOParticipantPositionStats() {
   );
 }
 
-export default FnOParticipantPositionStats;
+export default memo(FnOParticipantPositionStats);

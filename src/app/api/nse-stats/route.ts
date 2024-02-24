@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import * as fsAll from "fs";
 XLSX.set_fs(fsAll);
 
-function getFIIStatsTable(data) {
+function getFIIStatsTable(data: XLSX.WorkSheet) {
   const rowIds = [4, 5, 6, 7, 8, 10, 11, 12, 13, 14];
   return {
     header: [
@@ -35,7 +35,7 @@ function removeNullValues(arr: Array<any>) {
   return arr?.filter((item) => !!item);
 }
 
-async function handler(request) {
+async function handler(request: Request) {
   const requestUrl = new URL(request.url);
   const statsDate = requestUrl.searchParams.get("stats_date") || Date.now();
 

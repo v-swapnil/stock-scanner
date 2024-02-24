@@ -1,3 +1,4 @@
+import { TConsolidatedContributors } from "@/lib/types";
 import { RiRefreshLine } from "@remixicon/react";
 import {
   BadgeDelta,
@@ -11,8 +12,20 @@ import {
   Metric,
   Text,
 } from "@tremor/react";
+import { memo } from "react";
 
-export default function IndexInsights({
+interface IIndexInsightsProps {
+  title: string;
+  price: string | number;
+  pointsChanged: number | null;
+  contributors: TConsolidatedContributors;
+  advanceDecline: number | null;
+  canRefresh?: boolean;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
+}
+
+function IndexInsights({
   title,
   price,
   pointsChanged,
@@ -21,7 +34,7 @@ export default function IndexInsights({
   canRefresh,
   isRefreshing,
   onRefresh,
-}) {
+}: IIndexInsightsProps) {
   return (
     <Card className="w-full m-4">
       <Flex alignItems="start">
@@ -89,19 +102,14 @@ export default function IndexInsights({
         ))}
       </List>
       {advanceDecline && (
-        <>
-          <CategoryBar
-            values={[advanceDecline, 100 - advanceDecline]}
-            colors={["emerald", "rose"]}
-            className="mt-4"
-          />
-          {/* <Legend
-            categories={["Advance", "Decline"]}
-            colors={["emerald", "rose"]}
-            className="mt-3"
-          /> */}
-        </>
+        <CategoryBar
+          values={[advanceDecline, 100 - advanceDecline]}
+          colors={["emerald", "rose"]}
+          className="mt-4"
+        />
       )}
     </Card>
   );
 }
+
+export default memo(IndexInsights);

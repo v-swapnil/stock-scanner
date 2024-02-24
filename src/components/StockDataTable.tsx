@@ -19,8 +19,9 @@ import {
 } from "@tremor/react";
 import StockRangeBar from "./StockRangeBar";
 import { memo, useCallback, useState } from "react";
+import { TStockDataItem } from "@/lib/types";
 
-function SortableColumn({ id, title, onSortItems }) {
+function SortableColumn({ id, title, onSortItems }: any) {
   const [sortDirection, setSortDirection] = useState("asc");
 
   const onChangeSort = useCallback(() => {
@@ -48,7 +49,7 @@ function SortableColumn({ id, title, onSortItems }) {
   );
 }
 
-function MovingAverageBadge({ className, maPrice, maDiffPercentage }) {
+function MovingAverageBadge({ className, maPrice, maDiffPercentage }: any) {
   const deltaType =
     maDiffPercentage < 0.5 && maDiffPercentage > -0.5
       ? "unchanged"
@@ -62,11 +63,11 @@ function MovingAverageBadge({ className, maPrice, maDiffPercentage }) {
   );
 }
 
-function StockHighlights({ highlights }) {
+function StockHighlights({ highlights }: any) {
   const skip = ["Low Gains", "High Gains"];
   return (
     <Flex justifyContent="end" className="gap-2">
-      {highlights.map((item) => {
+      {highlights.map((item: any) => {
         if (skip.includes(item)) {
           return null;
         }
@@ -80,27 +81,39 @@ function StockHighlights({ highlights }) {
   );
 }
 
-const ComparatorMap: any = {
-  lessThanEqualTo: (ref, value) => ref <= value,
-  greaterThanEqualTo: (ref, value) => ref >= value,
-  equalTo: (ref, value) => ref === value,
-};
+// const ComparatorMap: any = {
+//   lessThanEqualTo: (ref, value) => ref <= value,
+//   greaterThanEqualTo: (ref, value) => ref >= value,
+//   equalTo: (ref, value) => ref === value,
+// };
 
-function BadgeWithConditionColor({
-  value,
-  refValue,
-  comparator,
-  firstCompareValue,
-  secondCompareValue,
-}) {
-  const compareFn = ComparatorMap[comparator];
-  const color = compareFn(refValue, firstCompareValue)
-    ? "emerald"
-    : typeof secondCompareValue !== "undefined" &&
-      compareFn(refValue, secondCompareValue)
-    ? "orange"
-    : "rose";
-  return <Badge color={color}>{value}</Badge>;
+// function BadgeWithConditionColor({
+//   value,
+//   refValue,
+//   comparator,
+//   firstCompareValue,
+//   secondCompareValue,
+// }) {
+//   const compareFn = ComparatorMap[comparator];
+//   const color = compareFn(refValue, firstCompareValue)
+//     ? "emerald"
+//     : typeof secondCompareValue !== "undefined" &&
+//       compareFn(refValue, secondCompareValue)
+//     ? "orange"
+//     : "rose";
+//   return <Badge color={color}>{value}</Badge>;
+// }
+
+interface IStockDataTableProps {
+  filteredWithFavorites: Array<TStockDataItem>;
+  showFundamentals: boolean;
+  showMonthlyChange: boolean;
+  showYearlyChange: boolean;
+  showMovingAverages: boolean;
+  // functions
+  onSortItems: (key: string, dir: string) => void;
+  onChangeSector: (sector: string, isIndustry?: boolean) => void;
+  onChangeFavorites: (stockData: TStockDataItem) => void;
 }
 
 function StockDataTable({
@@ -113,7 +126,7 @@ function StockDataTable({
   onSortItems,
   onChangeSector,
   onChangeFavorites,
-}) {
+}: IStockDataTableProps) {
   return (
     <Table className="mt-4">
       <TableHead>

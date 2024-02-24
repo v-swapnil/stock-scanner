@@ -3,7 +3,6 @@
 import { numberFormat } from "@/lib/number-format";
 import { RiSearchLine } from "@remixicon/react";
 import {
-  BadgeDelta,
   Card,
   Flex,
   Metric,
@@ -18,6 +17,7 @@ import {
 } from "@tremor/react";
 import axios from "axios";
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -28,51 +28,37 @@ import { useRouter } from "next/navigation";
 import IndexInsights from "./IndexInsights";
 import { toFixedIntegerNumber } from "@/lib/common";
 import StockDataTable from "./StockDataTable";
+import {
+  TAdvanceDeclineMetric,
+  TConsolidatedHighlights,
+  TConsolidatedContributors,
+  TIndexData,
+  TStockDataItem,
+} from "@/lib/types";
 
-function PreToDayChangeMetrics({ dayChange, preMarketChange }) {
-  const dayChangeParsed = parseFloat(dayChange);
-  const preMarketChangeParsed = parseFloat(preMarketChange);
-  let deltaType = "unchanged";
-  let deltaText = "";
-  if (preMarketChangeParsed < 0) {
-    if (dayChangeParsed > 0 || dayChangeParsed > preMarketChangeParsed) {
-      deltaType = "increase";
-      deltaText = "Increased";
-    } else if (dayChangeParsed < preMarketChangeParsed) {
-      deltaType = "decrease";
-      deltaText = "Further Decreased";
-    }
-  } else if (preMarketChangeParsed > 0) {
-    if (dayChangeParsed < 0 || dayChangeParsed < preMarketChangeParsed) {
-      deltaType = "decrease";
-      deltaText = "Decreased";
-    } else if (dayChangeParsed > preMarketChangeParsed) {
-      deltaType = "increase";
-      deltaText = "Further Increased";
-    }
-  }
-  return <BadgeDelta deltaType={deltaType}>{deltaText}</BadgeDelta>;
+interface IStockDataTableCardProps {
+  data: Array<TStockDataItem>;
 }
 
-function StockDataTableCard({ data }) {
+function StockDataTableCard({ data }: IStockDataTableCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [filtered, setFiltered] = useState(data);
+  const [filtered, setFiltered] = useState<Array<TStockDataItem>>(data);
   const [selectMCapIndex, setSelectedMCapIndex] = useState(0);
   const [selectedStockType, setSelectedStockType] = useState("All");
   const [selectedChangeType, setSelectedChangeType] = useState("All");
   const [selectedHighlight, setSelectedHighlight] = useState("All");
   const [selectedSector, setSelectedSector] = useState("All");
   const [selectedViews, setSelectedViews] = useState(["Basic"]);
-  const [fnoStocks, setFnOStocks] = useState([]);
-  const [niftyStocks, setNiftyStocks] = useState([]);
-  const [bankNiftyStocks, setBankNiftyStocks] = useState([]);
-  const [finNiftyStocks, setFinNiftyStocks] = useState([]);
-  const [midCapNiftyStocks, setMidCapNiftyStocks] = useState([]);
-  const [indexData, setIndexData] = useState(null);
+  const [fnoStocks, setFnOStocks] = useState<Array<string>>([]);
+  const [niftyStocks, setNiftyStocks] = useState<Array<string>>([]);
+  const [bankNiftyStocks, setBankNiftyStocks] = useState<Array<string>>([]);
+  const [finNiftyStocks, setFinNiftyStocks] = useState<Array<string>>([]);
+  const [midCapNiftyStocks, setMidCapNiftyStocks] = useState<Array<string>>([]);
+  const [indexData, setIndexData] = useState<TIndexData | null>(null);
   const [marketNews, setMarkerNews] = useState([]);
-  const [favoriteStocks, setFavoriteStocks] = useState([]);
+  const [favoriteStocks, setFavoriteStocks] = useState<Array<string>>([]);
 
   const [searchType, setSearchType] = useState("All");
   const [searchText, setSearchText] = useState("");
@@ -129,12 +115,12 @@ function StockDataTableCard({ data }) {
 
   useEffect(() => {
     getFavoriteStocks();
-    // getFnOStockList();
-    // getIndexData();
+    getFnOStockList();
+    getIndexData();
   }, [getFavoriteStocks, getFnOStockList, getIndexData]);
 
   const onChangeStockType = useCallback(
-    (newStockType) => {
+    (newStockType: string) => {
       setSelectedStockType(newStockType);
       const list =
         newStockType === "Starred"
@@ -167,7 +153,7 @@ function StockDataTableCard({ data }) {
   );
 
   const onChangeMCapType = useCallback(
-    (newIndex) => {
+    (newIndex: number) => {
       setSelectedMCapIndex(newIndex);
       const lowerBound = newIndex === 1 ? 1000 : newIndex === 2 ? 500 : 0;
       const upperBound = newIndex === 2 ? 1000 : newIndex === 3 ? 500 : null;
@@ -185,7 +171,7 @@ function StockDataTableCard({ data }) {
   );
 
   const onChangeDayChangeType = useCallback(
-    (newType) => {
+    (newType: string) => {
       setSelectedChangeType(newType);
       setFiltered(
         newType === "All"
@@ -197,19 +183,23 @@ function StockDataTableCard({ data }) {
   );
 
   const onChangeHighlight = useCallback(
-    (newType) => {
+    (newType: string) => {
       setSelectedHighlight(newType);
       setFiltered(
         newType === "All"
           ? data
-          : data.filter((item) => item.consolidatedHighlights.includes(newType))
+          : data.filter((item) =>
+              item.consolidatedHighlights.includes(
+                newType as TConsolidatedHighlights
+              )
+            )
       );
     },
     [data]
   );
 
   const onChangeSector = useCallback(
-    (newSector, isSector) => {
+    (newSector: string, isSector?: boolean) => {
       setSelectedSector(newSector);
       setFiltered(
         newSector === "All"
@@ -222,14 +212,14 @@ function StockDataTableCard({ data }) {
     [data]
   );
 
-  const onChangeViews = useCallback((newViews) => {
+  const onChangeViews = useCallback((newViews: Array<string>) => {
     setSelectedViews(Array.from(new Set(["Basic", ...newViews])));
   }, []);
 
-  const onSortItems = useCallback((keyName, direction) => {
+  const onSortItems = useCallback((keyName: string, direction: string) => {
     setFiltered((prevFiltered) =>
       prevFiltered
-        .sort((a, b) =>
+        .sort((a: any, b: any) =>
           direction === "desc"
             ? b[keyName] - a[keyName]
             : a[keyName] - b[keyName]
@@ -238,7 +228,7 @@ function StockDataTableCard({ data }) {
     );
   }, []);
 
-  const onChangeFavorites = useCallback(async (stockData) => {
+  const onChangeFavorites = useCallback(async (stockData: TStockDataItem) => {
     const response = await axios.patch("/api/stocks", {
       stock_id: stockData.name,
     });
@@ -255,7 +245,7 @@ function StockDataTableCard({ data }) {
     // });
   }, []);
 
-  const onChangeSearchText = useCallback((newText) => {
+  const onChangeSearchText = useCallback((newText: string) => {
     setSearchText(newText ? newText.toLowerCase() : "");
   }, []);
 
@@ -309,7 +299,7 @@ function StockDataTableCard({ data }) {
       .slice(sorted.length - 4, sorted.length)
       .filter((item) => item.dayChangeExact < 0)
       .reverse();
-    let contributors = [];
+    let contributors: TConsolidatedContributors = [];
     if (positiveContributors.length >= negativeContributors.length) {
       contributors = positiveContributors.map((item, index) => ({
         pointChangeSuffix: "%",
@@ -346,7 +336,7 @@ function StockDataTableCard({ data }) {
       .filter((item) => item.pointchange < 0)
       .sort((a, b) => a.pointchange - b.pointchange)
       .slice(0, 4);
-    let contributors = [];
+    let contributors: TConsolidatedContributors = [];
     if (positiveContributors.length >= negativeContributors.length) {
       contributors = positiveContributors.map((item, index) => ({
         // Positive Symbol
@@ -381,7 +371,7 @@ function StockDataTableCard({ data }) {
       .filter((item) => item.pointchange < 0)
       .sort((a, b) => a.pointchange - b.pointchange)
       .slice(0, 4);
-    let contributors = [];
+    let contributors: TConsolidatedContributors = [];
     if (positiveContributors.length >= negativeContributors.length) {
       contributors = positiveContributors.map((item, index) => ({
         // Positive Symbol
@@ -432,7 +422,7 @@ function StockDataTableCard({ data }) {
             (bankNiftyPositive / indexData.bankNiftyContributors.length) * 100
           )
         : null,
-    };
+    } as TAdvanceDeclineMetric;
   }, [data, indexData]);
 
   const viewController = useMemo(() => {
@@ -464,15 +454,15 @@ function StockDataTableCard({ data }) {
         />
         <IndexInsights
           title="Nifty"
-          price={numberFormat(indexData?.niftyPrice)}
-          pointsChanged={indexData?.niftyPointChanged}
+          price={numberFormat(indexData?.niftyPrice || 0)}
+          pointsChanged={indexData?.niftyPointChanged || null}
           contributors={niftyContributors}
           advanceDecline={advanceDeclineMetric.niftyAdvanceDecline}
         />
         <IndexInsights
           title="Bank Nifty"
-          price={numberFormat(indexData?.bankNiftyPrice)}
-          pointsChanged={indexData?.bankNiftyPointChange}
+          price={numberFormat(indexData?.bankNiftyPrice || 0)}
+          pointsChanged={indexData?.bankNiftyPointChange || null}
           contributors={bankNiftyContributors}
           advanceDecline={advanceDeclineMetric.bankNiftyAdvanceDecline}
         />
@@ -646,4 +636,4 @@ function StockDataTableCard({ data }) {
   );
 }
 
-export default StockDataTableCard;
+export default memo(StockDataTableCard);

@@ -2,8 +2,15 @@
 
 import { toFixedNumber } from "@/lib/common";
 import { Flex, Text, MarkerBar } from "@tremor/react";
+import { memo } from "react";
 
-function StockRangeBar({ low, high, current }) {
+interface IStockRangeBarProps {
+  low: number;
+  high: number;
+  current: number;
+}
+
+function StockRangeBar({ low, high, current }: IStockRangeBarProps) {
   const lowParsed = toFixedNumber(low);
   const highParsed = toFixedNumber(high);
   const markerValue = ((current - low) / (high - low)) * 100;
@@ -18,4 +25,4 @@ function StockRangeBar({ low, high, current }) {
   );
 }
 
-export default StockRangeBar;
+export default memo(StockRangeBar);

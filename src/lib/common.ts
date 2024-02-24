@@ -1,16 +1,20 @@
-export function toFixedNumber(number, fractionDigits = 2) {
-  return number?.toFixed(fractionDigits);
+import { TChangeGroupType, THighlights, TStockDataItem } from "./types";
+
+export function toFixedNumber(value: number, fractionDigits = 2) {
+  return value?.toFixed(fractionDigits);
 }
 
-export function toOneDecimalFixedNumber(number) {
-  return Math.round(number * 10) / 10;
+export function toOneDecimalFixedNumber(value: number) {
+  return Math.round(value * 10) / 10;
 }
 
-export function toFixedIntegerNumber(number) {
-  return Math.round(number);
+export function toFixedIntegerNumber(value: number) {
+  return Math.round(value);
 }
 
-export function getChangeGroupTypeToDeltaType(changeGroupType) {
+export function getChangeGroupTypeToDeltaType(
+  changeGroupType: TChangeGroupType
+) {
   switch (changeGroupType) {
     case "Crazy Selling":
       return "decrease";
@@ -31,7 +35,7 @@ export function getChangeGroupTypeToDeltaType(changeGroupType) {
   }
 }
 
-export function getChangePercentageGroup(changeValue) {
+export function getChangePercentageGroup(changeValue: string) {
   const lowerBound = 0.25;
   const lowerUpperBound = 2.5;
   const upperBound = 5;
@@ -44,35 +48,40 @@ export function getChangePercentageGroup(changeValue) {
   // [Heavy Buying] Change from lowerUpperBound% to upperBound%
   // [Crazy Buying] Change greater than upperBound%
   if (changePercentage <= -upperBound) {
-    return "Crazy Selling";
+    return "Crazy Selling" as TChangeGroupType;
   } else if (
     changePercentage <= -lowerUpperBound &&
     changePercentage > -upperBound
   ) {
-    return "Heavy Selling";
+    return "Heavy Selling" as TChangeGroupType;
   } else if (
     changePercentage <= -lowerBound &&
     changePercentage > -lowerUpperBound
   ) {
-    return "Moderate Selling";
+    return "Moderate Selling" as TChangeGroupType;
   } else if (changePercentage < lowerBound && changePercentage > -lowerBound) {
-    return "Neutral";
+    return "Neutral" as TChangeGroupType;
   } else if (
     changePercentage >= lowerBound &&
     changePercentage < lowerUpperBound
   ) {
-    return "Moderate Buying";
+    return "Moderate Buying" as TChangeGroupType;
   } else if (
     changePercentage >= lowerUpperBound &&
     changePercentage < upperBound
   ) {
-    return "Heavy Buying";
+    return "Heavy Buying" as TChangeGroupType;
   } else if (changePercentage >= upperBound) {
-    return "Crazy Buying";
+    return "Crazy Buying" as TChangeGroupType;
   }
+  return "Neutral" as TChangeGroupType;
 }
 
-export function getDiffOfPricesInPercentage(price1, price2, fractionDigits) {
+export function getDiffOfPricesInPercentage(
+  price1: number,
+  price2: number,
+  fractionDigits: number
+) {
   if (fractionDigits === 0) {
     return toFixedIntegerNumber(((price1 - price2) / price1) * 100);
   } else if (fractionDigits === 1) {
@@ -81,7 +90,7 @@ export function getDiffOfPricesInPercentage(price1, price2, fractionDigits) {
   return toFixedNumber(((price1 - price2) / price1) * 100, fractionDigits);
 }
 
-export function formatDate(date) {
+export function formatDate(date: string) {
   return new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -89,11 +98,12 @@ export function formatDate(date) {
   }).format(new Date(date));
 }
 
-export function getStockHighlights(stockDetails) {
+export function getStockHighlights(stockDetails: TStockDataItem) {
   const upperBound = 2.5;
   const downFromSixMonthHighPoints =
     stockDetails.sixMonthHighExact - stockDetails.sixMonthLowExact;
-  const highlights = {
+  const highlights: Record<THighlights, boolean> = {
+    "near-50-sma": stockDetails.fiftyDaySMADiff <= upperBound,
     "near-50-ema": stockDetails.fiftyDayEMADiff <= upperBound,
     "near-100-ema": stockDetails.hundredDayEMADiff <= upperBound,
     "near-200-ema": stockDetails.twoHundredDayEMADiff <= upperBound,
@@ -111,10 +121,12 @@ export function getStockHighlights(stockDetails) {
     "high-gains-6m": stockDetails.sixMonthChangeExact >= 40,
     "low-gains-6m": stockDetails.sixMonthChangeExact <= 10,
   };
-  return Object.keys(highlights).filter((item) => highlights[item]);
+  return Object.keys(highlights).filter(
+    (item) => highlights[item as THighlights]
+  ) as Array<THighlights>;
 }
 
-export function getConsolidatedHighlights(highlights) {
+export function getConsolidatedHighlights(highlights: Array<THighlights>) {
   const impHighlights = [];
   if (
     highlights.includes("near-200-ema") ||
@@ -150,6 +162,6 @@ export function getConsolidatedHighlights(highlights) {
   return impHighlights;
 }
 
-export function getSearchTerms(stockDetails) {
+export function getSearchTerms(stockDetails: TStockDataItem) {
   return `${stockDetails.name.toLowerCase()}:${stockDetails.description.toLowerCase()}:${stockDetails.sector.toLowerCase()}:${stockDetails.industry.toLowerCase()}`;
 }

@@ -11,6 +11,13 @@ import {
   getSearchTerms,
 } from "@/lib/common";
 import { numberToText } from "@/lib/number-format";
+import {
+  TChangeGroupType,
+  TPageSearchParams,
+  TSectorPriceEarningRatio,
+  TStockDataItem,
+  TStockDataMetrics,
+} from "@/lib/types";
 import { Flex } from "@tremor/react";
 import axios from "axios";
 
@@ -272,7 +279,7 @@ const availableColumns = [
   "W.R",
 ];
 
-function addStockInsights(stockDetails) {
+function addStockInsights(stockDetails: TStockDataItem) {
   const metrics = {
     mCapType:
       stockDetails.marketCapInBillions > 1000
@@ -342,7 +349,7 @@ function addStockInsights(stockDetails) {
   };
 }
 
-async function getStockData(searchParams) {
+async function getStockData(searchParams: TPageSearchParams) {
   const oneBillion = 1000000000;
   const marketCapInBillions = searchParams.market_cap_in_billions
     ? parseInt(searchParams.market_cap_in_billions)
@@ -536,11 +543,11 @@ async function getStockData(searchParams) {
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
       .filter(
-        (item) =>
+        (item: any) =>
           searchParams.expensive_stocks === "true" ||
           item.currentPriceExact < 10000
       )
-      .map((item) => addStockInsights(item));
+      .map((item: any) => addStockInsights(item));
     return filteredDataItems;
   } catch (error: any) {
     if (error.response) {
@@ -563,8 +570,8 @@ async function getStockData(searchParams) {
   }
 }
 
-function getMetricsFromStockData(stocksDataItems) {
-  const changeInsights = {
+function getMetricsFromStockData(stocksDataItems: Array<TStockDataItem>) {
+  const changeInsights: Record<TChangeGroupType, Array<number>> = {
     "Crazy Selling": [0, 0, 0],
     "Heavy Selling": [0, 0, 0],
     "Moderate Selling": [0, 0, 0],
@@ -573,6 +580,8 @@ function getMetricsFromStockData(stocksDataItems) {
     "Heavy Buying": [0, 0, 0],
     "Crazy Buying": [0, 0, 0],
   };
+  const priceEarningBySector: Record<string, TSectorPriceEarningRatio> = {};
+
   stocksDataItems.forEach((item) => {
     // Current Day
     if (item.dayChangeType) {
@@ -585,6 +594,22 @@ function getMetricsFromStockData(stocksDataItems) {
     // Current Month
     if (item.monthChangeType) {
       changeInsights[item.monthChangeType][2] += 1;
+    }
+    // Price Earning Ratios
+    if (item.sector && item.priceEarningTTM) {
+      if (!priceEarningBySector[item.sector]) {
+        priceEarningBySector[item.sector] = {
+          industry: item.industry,
+          sector: item.sector,
+          stocks: [],
+          priceEarningRatios: [],
+          average: 0,
+        };
+      }
+      priceEarningBySector[item.sector].stocks.push(item.name);
+      priceEarningBySector[item.sector].priceEarningRatios.push(
+        item.priceEarningTTMExact
+      );
     }
   });
   const keyNames = Object.keys(changeInsights);
@@ -600,23 +625,27 @@ function getMetricsFromStockData(stocksDataItems) {
   return {
     changeInsights: keyNames.map((item, index) => ({
       name: item,
-      value: changeInsights[item][0],
+      value: changeInsights[item as TChangeGroupType][0],
       color: colors[index],
     })),
     weekChangeInsights: keyNames.map((item, index) => ({
       name: item,
-      value: changeInsights[item][1],
+      value: changeInsights[item as TChangeGroupType][1],
       color: colors[index],
     })),
     monthChangeInsights: keyNames.map((item, index) => ({
       name: item,
-      value: changeInsights[item][2],
+      value: changeInsights[item as TChangeGroupType][2],
       color: colors[index],
     })),
-  };
+  } as TStockDataMetrics;
 }
 
-export default async function Home({ searchParams }) {
+interface IHomePageProps {
+  searchParams: TPageSearchParams;
+}
+
+export default async function Home({ searchParams }: IHomePageProps) {
   const stocksDataItems = await getStockData(searchParams);
   const stocksMetrics = getMetricsFromStockData(stocksDataItems);
   return (
@@ -632,10 +661,7 @@ export default async function Home({ searchParams }) {
           data={stocksMetrics.monthChangeInsights}
         />
       </Flex>
-      <StockDataTableCard
-        stocksMetrics={stocksMetrics}
-        data={stocksDataItems}
-      />
+      <StockDataTableCard data={stocksDataItems} />
     </main>
   );
 }

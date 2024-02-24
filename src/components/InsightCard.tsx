@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   Flex,
   Text,
@@ -14,12 +14,18 @@ import {
   Switch,
 } from "@tremor/react";
 import { getChangeGroupTypeToDeltaType } from "@/lib/common";
+import { TStockDataMetricsItem } from "@/lib/types";
 
-function InsightCard({ title, data }) {
+interface IInsightCardProps {
+  title: string;
+  data: Array<TStockDataMetricsItem>;
+}
+
+function InsightCard({ title, data }: IInsightCardProps) {
   const [isSwitchOn, setIsSwitchOn] = useState(true);
 
   return (
-    <Card className="m-4 w-full" >
+    <Card className="m-4 w-full">
       <Flex>
         <Metric>{title}</Metric>
         <Switch
@@ -33,7 +39,7 @@ function InsightCard({ title, data }) {
         <BarList data={data} className="mt-4" />
       ) : (
         <List className="mt-4">
-          {data.map((item: any) => (
+          {data.map((item) => (
             <ListItem key={item.name}>
               <Flex justifyContent="start" className="truncate space-x-2.5">
                 <BadgeDelta
@@ -50,4 +56,4 @@ function InsightCard({ title, data }) {
   );
 }
 
-export default InsightCard;
+export default memo(InsightCard);

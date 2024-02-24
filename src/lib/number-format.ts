@@ -1,19 +1,19 @@
-export function numberToText(number) {
+export function numberToText(value: number) {
   const billion = 1000000000;
   const million = 1000000;
   const thousand = 1000;
-  if (number >= billion) {
-    return (number / billion)?.toFixed(2) + "B";
-  } else if (number >= million) {
-    return (number / million)?.toFixed(2) + "M";
-  } else if (number >= thousand) {
-    return (number / thousand)?.toFixed(2) + "T";
+  if (value >= billion) {
+    return (value / billion)?.toFixed(2) + "B";
+  } else if (value >= million) {
+    return (value / million)?.toFixed(2) + "M";
+  } else if (value >= thousand) {
+    return (value / thousand)?.toFixed(2) + "T";
   } else {
-    return number;
+    return value;
   }
 }
 
-export function numberFormat(number) {
-  const parsed = parseFloat(number?.toFixed(2));
+export function numberFormat(value: number) {
+  const parsed = parseFloat(value?.toFixed(2));
   return new Intl.NumberFormat("en-IN").format(parsed);
 }
