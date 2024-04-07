@@ -19,7 +19,7 @@ import {
 } from "@tremor/react";
 import StockRangeBar from "./StockRangeBar";
 import { memo, useCallback, useState } from "react";
-import { TStockDataItem } from "@/lib/types";
+import { TSectorPriceEarningRatio, TStockDataItem } from "@/lib/types";
 
 function SortableColumn({ id, title, onSortItems }: any) {
   const [sortDirection, setSortDirection] = useState("asc");
@@ -106,6 +106,7 @@ function StockHighlights({ highlights }: any) {
 
 interface IStockDataTableProps {
   filteredWithFavorites: Array<TStockDataItem>;
+  priceEarningBySector: Record<string, TSectorPriceEarningRatio>;
   showFundamentals: boolean;
   showMonthlyChange: boolean;
   showYearlyChange: boolean;
@@ -118,6 +119,7 @@ interface IStockDataTableProps {
 
 function StockDataTable({
   filteredWithFavorites,
+  priceEarningBySector,
   showFundamentals,
   showMonthlyChange,
   showYearlyChange,
@@ -166,23 +168,16 @@ function StockDataTable({
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="dividendYieldExact"
-                  title="Div Yield"
+                  title="DY"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
               {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
               <TableHeaderCell className="text-right">
-                EPS (Diluted)
+                EPS-D (G)
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">Revenue</TableHeaderCell>
+              <TableHeaderCell className="text-right">RG</TableHeaderCell>
               <TableHeaderCell className="text-right">ROE</TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="preMarketChangeExact"
-                  title="Pre-Change"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
             </>
           )}
           <TableHeaderCell className="text-right">
@@ -283,6 +278,13 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
+          <TableHeaderCell>
+            <SortableColumn
+              id="freeFloatSharesPerExact"
+              title="FFS %"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
           <TableHeaderCell className="text-right">Avg Volume</TableHeaderCell>
           <TableHeaderCell className="text-right">Volume</TableHeaderCell>
           <TableHeaderCell>Sector</TableHeaderCell>
@@ -359,6 +361,7 @@ function StockDataTable({
                 }
               >
                 {item.priceEarningTTM}
+                {/* {" >> "}{priceEarningBySector[item.industry]?.average} */}
               </Badge>
             </TableCell>
             {showFundamentals && (
@@ -578,6 +581,19 @@ function StockDataTable({
             </TableCell>
             <TableCell className="text-right">
               <Badge color={"gray"}>{item.marketCap}</Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <Badge
+                color={
+                  item.freeFloatSharesPerExact >= 75
+                    ? "emerald"
+                    : item.freeFloatSharesPerExact >= 25
+                    ? "orange"
+                    : "rose"
+                }
+              >
+                {item.freeFloatSharesPer}%
+              </Badge>
             </TableCell>
             <TableCell className="text-right">
               <Badge color={"gray"}>{item.tenDayAverageVolume}</Badge>

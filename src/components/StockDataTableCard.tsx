@@ -34,13 +34,18 @@ import {
   TConsolidatedContributors,
   TIndexData,
   TStockDataItem,
+  TSectorPriceEarningRatio,
 } from "@/lib/types";
 
 interface IStockDataTableCardProps {
   data: Array<TStockDataItem>;
+  priceEarningBySector: Record<string, TSectorPriceEarningRatio>;
 }
 
-function StockDataTableCard({ data }: IStockDataTableCardProps) {
+function StockDataTableCard({
+  data,
+  priceEarningBySector,
+}: IStockDataTableCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -622,6 +627,7 @@ function StockDataTableCard({ data }: IStockDataTableCardProps) {
         </Flex>
         <StockDataTable
           filteredWithFavorites={filteredWithFavorites}
+          priceEarningBySector={priceEarningBySector}
           showFundamentals={showFundamentals}
           showMonthlyChange={showMonthlyChange}
           showYearlyChange={showYearlyChange}

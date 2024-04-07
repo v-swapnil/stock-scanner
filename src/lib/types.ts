@@ -142,6 +142,7 @@ export type TStockDataItem = {
   preMarketChangeDeltaType: string;
   consolidatedHighlights: Array<TConsolidatedHighlights>;
   searchTerms: string;
+  freeFloatSharesPer: string;
   // optional
   isStarred?: boolean;
   isFnO?: boolean;
@@ -158,6 +159,7 @@ export type TStockDataMetrics = {
   changeInsights: Array<TStockDataMetricsItem>;
   weekChangeInsights: Array<TStockDataMetricsItem>;
   monthChangeInsights: Array<TStockDataMetricsItem>;
+  priceEarningBySector: Record<string, TSectorPriceEarningRatio>;
 };
 
 export type TFnOParticipantsOpenInterest = {
@@ -195,7 +197,7 @@ export type TSectorPriceEarningRatio = {
   sector: string;
   stocks: Array<string>;
   priceEarningRatios: Array<number>;
-  average: number;
+  average: string | number;
 };
 
 export type TIndexDataContributorItem = {
