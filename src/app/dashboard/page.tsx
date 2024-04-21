@@ -243,6 +243,7 @@ const availableColumns = [
   "sell_gen_admin_exp_other_ratio_fy",
   "sell_gen_admin_exp_other_ratio_ttm",
   "float_shares_outstanding",
+  "float_shares_percent_current",
   "SMA5",
   "SMA10",
   "SMA20",
@@ -432,6 +433,7 @@ async function getStockData(searchParams: TPageSearchParams) {
       "earnings_per_share_diluted_yoy_growth_ttm",
       "total_revenue_yoy_growth_ttm",
       "return_on_equity",
+      "float_shares_percent_current",
     ],
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
@@ -539,6 +541,8 @@ async function getStockData(searchParams: TPageSearchParams) {
       totalRevenueGrowthTTMExact: item.d[48],
       returnOnEquity: toFixedNumber(item.d[49]),
       returnOnEquityExact: item.d[49],
+      freeFloatSharesPer: toFixedNumber(item.d[50]),
+      freeFloatSharesPerExact: item.d[50],
     }));
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
@@ -567,6 +571,7 @@ async function getStockData(searchParams: TPageSearchParams) {
       console.error("Error", error.message);
     }
     console.error("error.config", error.config);
+    return [];
   }
 }
 
@@ -596,9 +601,9 @@ function getMetricsFromStockData(stocksDataItems: Array<TStockDataItem>) {
       changeInsights[item.monthChangeType][2] += 1;
     }
     // Price Earning Ratios
-    if (item.sector && item.priceEarningTTM) {
-      if (!priceEarningBySector[item.sector]) {
-        priceEarningBySector[item.sector] = {
+    if (item.industry && item.priceEarningTTM) {
+      if (!priceEarningBySector[item.industry]) {
+        priceEarningBySector[item.industry] = {
           industry: item.industry,
           sector: item.sector,
           stocks: [],
@@ -606,8 +611,8 @@ function getMetricsFromStockData(stocksDataItems: Array<TStockDataItem>) {
           average: 0,
         };
       }
-      priceEarningBySector[item.sector].stocks.push(item.name);
-      priceEarningBySector[item.sector].priceEarningRatios.push(
+      priceEarningBySector[item.industry].stocks.push(item.name);
+      priceEarningBySector[item.industry].priceEarningRatios.push(
         item.priceEarningTTMExact
       );
     }
@@ -622,6 +627,14 @@ function getMetricsFromStockData(stocksDataItems: Array<TStockDataItem>) {
     "green",
     "emerald",
   ];
+  const sectors = Object.keys(priceEarningBySector);
+  sectors.forEach((key) => {
+    priceEarningBySector[key].average = toFixedNumber(
+      priceEarningBySector[key].priceEarningRatios.reduce((a, v) => a + v, 0) /
+        priceEarningBySector[key].priceEarningRatios.length
+    );
+  });
+
   return {
     changeInsights: keyNames.map((item, index) => ({
       name: item,
@@ -638,6 +651,7 @@ function getMetricsFromStockData(stocksDataItems: Array<TStockDataItem>) {
       value: changeInsights[item as TChangeGroupType][2],
       color: colors[index],
     })),
+    priceEarningBySector: priceEarningBySector,
   } as TStockDataMetrics;
 }
 
@@ -647,7 +661,7 @@ interface IHomePageProps {
 
 export default async function Home({ searchParams }: IHomePageProps) {
   const stocksDataItems = await getStockData(searchParams);
-  const stocksMetrics = getMetricsFromStockData(stocksDataItems);
+  const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
       <Flex className="px-2">
@@ -661,7 +675,10 @@ export default async function Home({ searchParams }: IHomePageProps) {
           data={stocksMetrics.monthChangeInsights}
         />
       </Flex>
-      <StockDataTableCard data={stocksDataItems} />
+      <StockDataTableCard
+        data={stocksDataItems}
+        priceEarningBySector={stocksMetrics.priceEarningBySector}
+      />
     </main>
   );
 }

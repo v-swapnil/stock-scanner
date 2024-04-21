@@ -1,8 +1,9 @@
 "use client";
 
 import { numberFormat } from "@/lib/number-format";
-import { RiSearchLine } from "@remixicon/react";
+import { RiSearch2Line, RiSearchLine } from "@remixicon/react";
 import {
+  Button,
   Card,
   Flex,
   Metric,
@@ -624,6 +625,9 @@ function StockDataTableCard({
             value={searchText}
             onValueChange={onChangeSearchText}
           />
+          <Button variant="secondary" icon={RiSearch2Line}>
+            Search
+          </Button>
         </Flex>
         <StockDataTable
           filteredWithFavorites={filteredWithFavorites}

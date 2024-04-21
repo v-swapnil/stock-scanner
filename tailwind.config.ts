@@ -1,6 +1,7 @@
-const colors = require("tailwindcss/colors");
+import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 
-module.exports = {
+const config: Config = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
     // Path to Tremor module
@@ -130,3 +131,5 @@ module.exports = {
   ],
   plugins: [require("@headlessui/tailwindcss"), require("@tailwindcss/forms")],
 };
+
+export default config;
