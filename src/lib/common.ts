@@ -35,10 +35,12 @@ export function getChangeGroupTypeToDeltaType(
   }
 }
 
+// Change percentage lower and upper bounds
+const lowerBound = 0.25;
+const lowerUpperBound = 2.5;
+const upperBound = 5;
+
 export function getChangePercentageGroup(changeValue: string) {
-  const lowerBound = 0.25;
-  const lowerUpperBound = 2.5;
-  const upperBound = 5;
   const changePercentage = parseFloat(changeValue);
   // [Crazy Selling] Change less than -upperBound%
   // [Heavy Selling] Change from -lowerUpperBound% to -upperBound%
@@ -75,6 +77,45 @@ export function getChangePercentageGroup(changeValue: string) {
     return "Crazy Buying" as TChangeGroupType;
   }
   return "Neutral" as TChangeGroupType;
+}
+
+export function getDeltaTypeFromChangePercentage(changeValue: string) {
+  const changePercentage = parseFloat(changeValue);
+  // [Crazy Selling] Change less than -upperBound%
+  // [Heavy Selling] Change from -lowerUpperBound% to -upperBound%
+  // [Moderate Selling] Change from -lowerBound% to -lowerUpperBound%
+  // [Neutral] Change around 0%
+  // [Moderate Buying] Change from lowerBound% to lowerUpperBound%
+  // [Heavy Buying] Change from lowerUpperBound% to upperBound%
+  // [Crazy Buying] Change greater than upperBound%
+  if (changePercentage <= -upperBound) {
+    return "decrease";
+  } else if (
+    changePercentage <= -lowerUpperBound &&
+    changePercentage > -upperBound
+  ) {
+    return "decrease";
+  } else if (
+    changePercentage <= -lowerBound &&
+    changePercentage > -lowerUpperBound
+  ) {
+    return "moderateDecrease";
+  } else if (changePercentage < lowerBound && changePercentage > -lowerBound) {
+    return "unchanged";
+  } else if (
+    changePercentage >= lowerBound &&
+    changePercentage < lowerUpperBound
+  ) {
+    return "moderateIncrease";
+  } else if (
+    changePercentage >= lowerUpperBound &&
+    changePercentage < upperBound
+  ) {
+    return "increase";
+  } else if (changePercentage >= upperBound) {
+    return "increase";
+  }
+  return "unchanged";
 }
 
 export function getDiffOfPricesInPercentage(

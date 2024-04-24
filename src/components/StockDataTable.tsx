@@ -1,6 +1,6 @@
 import {
-  RiSortNumberAsc,
-  RiSortNumberDesc,
+  RiArrowDownSLine,
+  RiArrowUpSLine,
   RiStarFill,
   RiStarLine,
 } from "@remixicon/react";
@@ -12,17 +12,26 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFoot,
+  TableFooterCell,
   TableHead,
   TableHeaderCell,
   TableRow,
-  Text,
 } from "@tremor/react";
 import StockRangeBar from "./StockRangeBar";
-import { memo, useCallback, useState } from "react";
-import { TSectorPriceEarningRatio, TStockDataItem } from "@/lib/types";
+import { memo, useCallback, useMemo, useState } from "react";
+import {
+  TCompareFn,
+  TSectorPriceEarningRatio,
+  TStockDataItem,
+} from "@/lib/types";
+import StockHighlights from "./StockHighlights";
+import classNames from "classnames";
+import BadgeColorWithThreshold from "./BadgeColorWithThreshold";
+import { getDeltaTypeFromChangePercentage, toFixedNumber } from "@/lib/common";
 
-function SortableColumn({ id, title, onSortItems }: any) {
-  const [sortDirection, setSortDirection] = useState("asc");
+function SortableColumn({ id, title, start, onSortItems }: any) {
+  const [sortDirection, setSortDirection] = useState("");
 
   const onChangeSort = useCallback(() => {
     const newSortDirection = sortDirection === "asc" ? "desc" : "asc";
@@ -31,20 +40,28 @@ function SortableColumn({ id, title, onSortItems }: any) {
   }, [id, sortDirection, onSortItems]);
 
   return (
-    <Flex justifyContent="end">
-      <Text>{title}</Text>
-      <Icon
-        size="sm"
-        icon={sortDirection === "desc" ? RiSortNumberDesc : RiSortNumberAsc}
-        // color={sortDirection === "desc" ? "emerald" : "rose"}
-        color="gray"
-        variant="simple"
-        tooltip={
-          "Sort " + (sortDirection === "asc" ? "Descending" : "Ascending")
-        }
-        className="ml-2 p-0 cursor-pointer"
-        onClick={onChangeSort}
-      />
+    <Flex
+      justifyContent={start ? "start" : "end"}
+      onClick={onChangeSort}
+      className="cursor-pointer"
+    >
+      {title}
+      <div className="-space-y-2 ml-2">
+        <RiArrowUpSLine
+          className={classNames(
+            "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
+            sortDirection === "desc" ? "opacity-30" : ""
+          )}
+          aria-hidden={true}
+        />
+        <RiArrowDownSLine
+          className={classNames(
+            "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
+            sortDirection === "asc" ? "opacity-30" : ""
+          )}
+          aria-hidden={true}
+        />
+      </div>
     </Flex>
   );
 }
@@ -62,47 +79,6 @@ function MovingAverageBadge({ className, maPrice, maDiffPercentage }: any) {
     </BadgeDelta>
   );
 }
-
-function StockHighlights({ highlights }: any) {
-  const skip = ["Low Gains", "High Gains"];
-  return (
-    <Flex justifyContent="end" className="gap-2">
-      {highlights.map((item: any) => {
-        if (skip.includes(item)) {
-          return null;
-        }
-        return (
-          <Badge key={item} color="fuchsia">
-            {item}
-          </Badge>
-        );
-      })}
-    </Flex>
-  );
-}
-
-// const ComparatorMap: any = {
-//   lessThanEqualTo: (ref, value) => ref <= value,
-//   greaterThanEqualTo: (ref, value) => ref >= value,
-//   equalTo: (ref, value) => ref === value,
-// };
-
-// function BadgeWithConditionColor({
-//   value,
-//   refValue,
-//   comparator,
-//   firstCompareValue,
-//   secondCompareValue,
-// }) {
-//   const compareFn = ComparatorMap[comparator];
-//   const color = compareFn(refValue, firstCompareValue)
-//     ? "emerald"
-//     : typeof secondCompareValue !== "undefined" &&
-//       compareFn(refValue, secondCompareValue)
-//     ? "orange"
-//     : "rose";
-//   return <Badge color={color}>{value}</Badge>;
-// }
 
 interface IStockDataTableProps {
   filteredWithFavorites: Array<TStockDataItem>;
@@ -129,12 +105,70 @@ function StockDataTable({
   onChangeSector,
   onChangeFavorites,
 }: IStockDataTableProps) {
+  const insights = useMemo(() => {
+    let totalPriceEarningRatio = 0;
+    let totalPreMarketChange = 0;
+    let totalDayChange = 0;
+    let totalWeekChange = 0;
+    let totalMonthChange = 0;
+    let totalThreeMonthChange = 0;
+
+    filteredWithFavorites.forEach((item) => {
+      totalPriceEarningRatio += item.priceEarningTTMExact || 0;
+      totalPreMarketChange += item.preMarketChangeExact;
+      totalDayChange += item.dayChangeExact;
+      totalWeekChange += item.weekChangeExact;
+      totalMonthChange += item.monthChangeExact;
+      totalThreeMonthChange += item.threeMonthChangeExact;
+    });
+
+    const averages = {
+      avgPriceEarningRatio: toFixedNumber(
+        totalPriceEarningRatio / filteredWithFavorites.length
+      ),
+      avgPreMarketChange: toFixedNumber(
+        totalPreMarketChange / filteredWithFavorites.length
+      ),
+      avgDayChange: toFixedNumber(
+        totalDayChange / filteredWithFavorites.length
+      ),
+      avgWeekChange: toFixedNumber(
+        totalWeekChange / filteredWithFavorites.length
+      ),
+      avgMonthChange: toFixedNumber(
+        totalMonthChange / filteredWithFavorites.length
+      ),
+      avgThreeMonthChange: toFixedNumber(
+        totalThreeMonthChange / filteredWithFavorites.length
+      ),
+    };
+
+    return {
+      ...averages,
+      avgPriceEarningRatioExact: parseFloat(averages.avgPriceEarningRatio),
+      avgPreMarketChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgPreMarketChange
+      ),
+      avgDayChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgDayChange
+      ),
+      avgWeekChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgWeekChange
+      ),
+      avgMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgMonthChange
+      ),
+      avgThreeMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgThreeMonthChange
+      ),
+    };
+  }, [filteredWithFavorites]);
+
   return (
     <Table className="mt-4">
       <TableHead>
-        <TableRow>
+        <TableRow className="bg-tremor-background-muted dark:bg-dark-tremor-background-muted">
           <TableHeaderCell>Name</TableHeaderCell>
-          {/* <TableHeaderCell>Sector</TableHeaderCell> */}
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="currentPriceExact"
@@ -172,7 +206,6 @@ function StockDataTable({
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              {/* <TableHeaderCell className="text-right">EPS</TableHeaderCell> */}
               <TableHeaderCell className="text-right">
                 EPS-D (G)
               </TableHeaderCell>
@@ -187,16 +220,6 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          {/* <TableHeaderCell className="text-right">
-                Pre Volume
-              </TableHeaderCell> */}
-          {/* <TableHeaderCell className="text-right">
-                <SortableColumn
-                  id="changeFromOpen"
-                  title="Open Change"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell> */}
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="dayChangeExact"
@@ -204,9 +227,6 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          {/* <TableHeaderCell className="text-right">
-                Pre to Day Close
-              </TableHeaderCell> */}
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="weekChangeExact"
@@ -228,7 +248,7 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          {showMonthlyChange && (
+          {showYearlyChange && (
             <>
               <TableHeaderCell className="text-right">
                 <SortableColumn
@@ -237,10 +257,6 @@ function StockDataTable({
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-            </>
-          )}
-          {showYearlyChange && (
-            <>
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="oneYearChangeExact"
@@ -257,8 +273,9 @@ function StockDataTable({
               </TableHeaderCell>
             </>
           )}
-          <TableHeaderCell className="text-right">
+          <TableHeaderCell className="text-left">
             <SortableColumn
+              start
               id="upFromOneYearLowExact"
               title="Up 6M / 1Y Low"
               onSortItems={onSortItems}
@@ -271,8 +288,9 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell>
+          <TableHeaderCell className="text-left">
             <SortableColumn
+              start
               id="marketCapExact"
               title="MCap"
               onSortItems={onSortItems}
@@ -285,7 +303,7 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell className="text-right">Avg Volume</TableHeaderCell>
+          <TableHeaderCell className="text-left">Avg Volume</TableHeaderCell>
           <TableHeaderCell className="text-right">Volume</TableHeaderCell>
           <TableHeaderCell>Sector</TableHeaderCell>
           {showMovingAverages && (
@@ -303,39 +321,26 @@ function StockDataTable({
         </TableRow>
       </TableHead>
       <TableBody>
-        {filteredWithFavorites.map((item: any) => (
+        {filteredWithFavorites.map((item) => (
           <TableRow key={item.name}>
             <TableCell>
               <Flex justifyContent="start">
-                {/* <span
-                    data-tooltip-id={item.name}
-                    data-tooltip-content={item.description}
-                    data-tooltip-place="top"
-                  >
-                    {item.name}
-                  </span>
-                  <Tooltip id={item.name} /> */}
-                {/* <Badge color="indigo" className="mr-2">{index + 1}</Badge> */}
                 {item.description} ({item.name})
-                <Badge
+                <BadgeColorWithThreshold
                   className="ml-2"
-                  color={
-                    item.mCapType === "Large"
-                      ? "emerald"
-                      : item.mCapType === "Mid"
-                      ? "orange"
-                      : "rose"
-                  }
+                  value={item.mCapType}
+                  positiveThreshold="Large"
+                  neutralThreshold="Mid"
                 >
                   {item.mCapType}
-                </Badge>
+                </BadgeColorWithThreshold>
                 {item.isFnO && (
-                  <Badge className="ml-2" color={"purple"}>
+                  <Badge className="ml-2" color="purple">
                     FnO
                   </Badge>
                 )}
                 {item.isIndex && (
-                  <Badge className="ml-2" color={"cyan"}>
+                  <Badge className="ml-2" color="cyan">
                     Index
                   </Badge>
                 )}
@@ -348,27 +353,25 @@ function StockDataTable({
               </Flex>
             </TableCell>
             <TableCell className="text-right">
-              <Badge color={"gray"}>{item.currentPrice}</Badge>
+              <Badge color="gray">{item.currentPrice}</Badge>
             </TableCell>
             <TableCell className="text-right">
-              <Badge
-                color={
-                  item.priceEarningTTMExact <= 25
-                    ? "emerald"
-                    : item.priceEarningTTMExact <= 75
-                    ? "orange"
-                    : "rose"
-                }
+              <BadgeColorWithThreshold
+                value={item.priceEarningTTMExact}
+                positiveThreshold={25}
+                neutralThreshold={75}
+                compareFn={TCompareFn.LTE}
               >
                 {item.priceEarningTTM}
-                {/* {" >> "}{priceEarningBySector[item.industry]?.average} */}
-              </Badge>
+              </BadgeColorWithThreshold>
             </TableCell>
             {showFundamentals && (
               <>
                 <TableCell className="text-right">
                   <Badge
-                    color={item.priceEarningGrowth <= 2 ? "emerald" : "rose"}
+                    color={
+                      item.priceEarningGrowthExact <= 2 ? "emerald" : "rose"
+                    }
                   >
                     {item.priceEarningGrowth}
                   </Badge>
@@ -383,9 +386,9 @@ function StockDataTable({
                 <TableCell className="text-right">
                   <Badge
                     color={
-                      item.dividendYield >= 8
+                      item.dividendYieldExact >= 8
                         ? "emerald"
-                        : item.dividendYield >= 4
+                        : item.dividendYieldExact >= 4
                         ? "orange"
                         : "rose"
                     }
@@ -393,9 +396,6 @@ function StockDataTable({
                     {item.dividendYield ? item.dividendYield + "%" : ""}
                   </Badge>
                 </TableCell>
-                {/* <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.earningPerShareTTM}</Badge>
-                </TableCell> */}
                 <TableCell className="text-right">
                   <Badge
                     color={
@@ -450,120 +450,46 @@ function StockDataTable({
                 {item.preMarketChange}%
               </BadgeDelta>
             </TableCell>
-            {/* <TableCell className="text-right">
-                  <Badge color={"gray"}>{item.preMarketVolume}</Badge>
-                </TableCell> */}
-            {/* <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.changeFromOpen === 0
-                        ? "unchanged"
-                        : item.changeFromOpen > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.changeFromOpen}%
-                  </BadgeDelta>
-                </TableCell> */}
             <TableCell className="text-right">
               <BadgeDelta deltaType={item.dayChangeDeltaType}>
                 {item.dayChange}%
               </BadgeDelta>
             </TableCell>
-            {/* <TableCell className="text-right">
-                  <PreToDayChangeMetrics
-                    dayChange={item.dayChange}
-                    preMarketChange={item.preMarketChange}
-                  />
-                </TableCell> */}
             <TableCell className="text-right">
-              <BadgeDelta
-                deltaType={
-                  item.weekChange === 0
-                    ? "unchanged"
-                    : item.weekChange > 0
-                    ? "increase"
-                    : "decrease"
-                }
-              >
+              <BadgeDelta deltaType={item.weekChangeDeltaType}>
                 {item.weekChange}%
               </BadgeDelta>
             </TableCell>
             <TableCell className="text-right">
-              <BadgeDelta
-                deltaType={
-                  item.monthChange === 0
-                    ? "unchanged"
-                    : item.monthChange > 0
-                    ? "increase"
-                    : "decrease"
-                }
-              >
+              <BadgeDelta deltaType={item.monthChangeDeltaType}>
                 {item.monthChange}%
               </BadgeDelta>
             </TableCell>
             <TableCell className="text-right">
-              <BadgeDelta
-                deltaType={
-                  item.threeMonthChange === 0
-                    ? "unchanged"
-                    : item.threeMonthChange > 0
-                    ? "increase"
-                    : "decrease"
-                }
-              >
+              <BadgeDelta deltaType={item.threeMonthChangeDeltaType}>
                 {item.threeMonthChange}%
               </BadgeDelta>
             </TableCell>
-            {showMonthlyChange && (
-              <>
-                <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.sixMonthChange === 0
-                        ? "unchanged"
-                        : item.sixMonthChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.sixMonthChange}%
-                  </BadgeDelta>
-                </TableCell>
-              </>
-            )}
             {showYearlyChange && (
               <>
                 <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.oneYearChange === 0
-                        ? "unchanged"
-                        : item.oneYearChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
-                    {item.oneYearChange}%
+                  <BadgeDelta deltaType={item.sixMonthChangeDeltaType}>
+                    {item.sixMonthChange}%
                   </BadgeDelta>
                 </TableCell>
                 <TableCell className="text-right">
-                  <BadgeDelta
-                    deltaType={
-                      item.fiveYearChange === 0
-                        ? "unchanged"
-                        : item.fiveYearChange > 0
-                        ? "increase"
-                        : "decrease"
-                    }
-                  >
+                  <BadgeDelta deltaType={item.yearChangeDeltaType}>
+                    {item.yearChange}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta deltaType={item.fiveYearChangeDeltaType}>
                     {item.fiveYearChange}%
                   </BadgeDelta>
                 </TableCell>
               </>
             )}
-            <TableCell className="text-right">
+            <TableCell className="text-left">
               <BadgeDelta deltaType="increase" className="mr-2">
                 {item.upFromSixMonthLow}%
               </BadgeDelta>
@@ -579,33 +505,30 @@ function StockDataTable({
                 {item.downFromOneYearHigh}%
               </BadgeDelta>
             </TableCell>
-            <TableCell className="text-right">
-              <Badge color={"gray"}>{item.marketCap}</Badge>
+            <TableCell className="text-left">
+              <Badge color="gray">{item.marketCap}</Badge>
             </TableCell>
             <TableCell className="text-right">
-              <Badge
-                color={
-                  item.freeFloatSharesPerExact >= 75
-                    ? "emerald"
-                    : item.freeFloatSharesPerExact >= 25
-                    ? "orange"
-                    : "rose"
-                }
+              <BadgeColorWithThreshold
+                value={item.freeFloatSharesPerExact}
+                positiveThreshold={75}
+                neutralThreshold={25}
+                compareFn={TCompareFn.GTE}
               >
                 {item.freeFloatSharesPer}%
-              </Badge>
+              </BadgeColorWithThreshold>
             </TableCell>
-            <TableCell className="text-right">
-              <Badge color={"gray"}>{item.tenDayAverageVolume}</Badge>
+            <TableCell className="text-left">
+              <Badge color="gray">{item.tenDayAverageVolume}</Badge>
             </TableCell>
             <TableCell className="text-right">
               <Flex justifyContent="end">
                 {item.volumeIncreasedBy ? (
-                  <BadgeDelta deltaType={"increase"}>
+                  <BadgeDelta deltaType="increase">
                     {item.volume} ({item.volumeIncreasedBy}%)
                   </BadgeDelta>
                 ) : (
-                  <Badge color={"gray"}>{item.volume}</Badge>
+                  <Badge color="gray">{item.volume}</Badge>
                 )}
               </Flex>
             </TableCell>
@@ -676,6 +599,79 @@ function StockDataTable({
           </TableRow>
         ))}
       </TableBody>
+      <TableFoot>
+        <TableRow className="bg-tremor-background-muted dark:bg-dark-tremor-background-muted">
+          <TableFooterCell>Average</TableFooterCell>
+          <TableFooterCell className="text-right"></TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeColorWithThreshold
+              value={insights.avgPriceEarningRatioExact}
+              positiveThreshold={25}
+              neutralThreshold={75}
+              compareFn={TCompareFn.LTE}
+            >
+              {insights.avgPriceEarningRatio}
+            </BadgeColorWithThreshold>
+          </TableFooterCell>
+          {showFundamentals && (
+            <>
+              <TableFooterCell className="text-right">PEG AVG</TableFooterCell>
+              <TableFooterCell className="text-right">PB AVG</TableFooterCell>
+              <TableFooterCell className="text-right">DY AVG</TableFooterCell>
+              EPS-D (G) AVG
+              <TableFooterCell className="text-right">RG AVG</TableFooterCell>
+              <TableFooterCell className="text-right">ROE AVG</TableFooterCell>
+            </>
+          )}
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgPreMarketChangeDeltaType}>
+              {insights.avgPreMarketChange}
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgDayChangeDeltaType}>
+              {insights.avgDayChange}
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgWeekChangeDeltaType}>
+              {insights.avgWeekChange}
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgMonthChangeDeltaType}>
+              {insights.avgMonthChange}
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgThreeMonthChangeDeltaType}>
+              {insights.avgThreeMonthChange}
+            </BadgeDelta>
+          </TableFooterCell>
+          {showYearlyChange && (
+            <>
+              <TableFooterCell className="text-right">6M AVG</TableFooterCell>
+              <TableFooterCell className="text-right">1Y AVG</TableFooterCell>
+              <TableFooterCell className="text-right">5Y AVG</TableFooterCell>
+            </>
+          )}
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-right"></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-right"></TableFooterCell>
+          <TableFooterCell></TableFooterCell>
+          {showMovingAverages && (
+            <>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+            </>
+          )}
+          <TableFooterCell className="text-right"></TableFooterCell>
+          <TableFooterCell></TableFooterCell>
+        </TableRow>
+      </TableFoot>
     </Table>
   );
 }

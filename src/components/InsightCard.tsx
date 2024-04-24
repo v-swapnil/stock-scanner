@@ -36,7 +36,8 @@ function InsightCard({ title, data }: IInsightCardProps) {
         />
       </Flex>
       {isSwitchOn ? (
-        <BarList data={data} className="mt-4" />
+        // @ts-expect-error don't need to sort
+        <BarList data={data} className="mt-4" sortOrder={null} />
       ) : (
         <List className="mt-4">
           {data.map((item) => (

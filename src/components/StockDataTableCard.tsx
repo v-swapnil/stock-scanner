@@ -37,6 +37,7 @@ import {
   TStockDataItem,
   TSectorPriceEarningRatio,
 } from "@/lib/types";
+import StockDataTableNew from "./StockDataTableNew";
 
 interface IStockDataTableCardProps {
   data: Array<TStockDataItem>;
@@ -641,6 +642,13 @@ function StockDataTableCard({
           onChangeSector={onChangeSector}
           onChangeFavorites={onChangeFavorites}
         />
+        {/* <StockDataTableNew
+          filteredWithFavorites={filteredWithFavorites}
+          // functions
+          onSortItems={onSortItems}
+          onChangeSector={onChangeSector}
+          onChangeFavorites={onChangeFavorites}
+        /> */}
       </Card>
     </>
   );

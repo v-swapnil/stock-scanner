@@ -9,6 +9,7 @@ import {
   toFixedIntegerNumber,
   toFixedNumber,
   getSearchTerms,
+  getDeltaTypeFromChangePercentage,
 } from "@/lib/common";
 import { numberToText } from "@/lib/number-format";
 import {
@@ -345,6 +346,22 @@ function addStockInsights(stockDetails: TStockDataItem) {
     preMarketChangeDeltaType: getChangeGroupTypeToDeltaType(
       metrics.preMarketChangeType
     ),
+    weekChangeDeltaType: getChangeGroupTypeToDeltaType(metrics.weekChangeType),
+    monthChangeDeltaType: getChangeGroupTypeToDeltaType(
+      metrics.monthChangeType
+    ),
+    threeMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
+      stockDetails.threeMonthChange
+    ),
+    sixMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
+      stockDetails.sixMonthChange
+    ),
+    yearChangeDeltaType: getDeltaTypeFromChangePercentage(
+      stockDetails.yearChange
+    ),
+    fiveYearChangeDeltaType: getDeltaTypeFromChangePercentage(
+      stockDetails.fiveYearChange
+    ),
     consolidatedHighlights: getConsolidatedHighlights(metrics.highlights),
     searchTerms: getSearchTerms(stockDetails),
   };
@@ -460,8 +477,8 @@ async function getStockData(searchParams: TPageSearchParams) {
       threeMonthChangeExact: item.d[8],
       sixMonthChange: toFixedNumber(item.d[9]),
       sixMonthChangeExact: item.d[9],
-      oneYearChange: toFixedNumber(item.d[10]),
-      oneYearChangeExact: item.d[10],
+      yearChange: toFixedNumber(item.d[10]),
+      yearChangeExact: item.d[10],
       fiveYearChange: toFixedNumber(item.d[11]),
       fiveYearChangeExact: item.d[11],
       marketCap: numberToText(item.d[12]),

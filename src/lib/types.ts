@@ -53,8 +53,8 @@ export type TStockDataItem = {
   threeMonthChangeExact: number;
   sixMonthChange: string;
   sixMonthChangeExact: number;
-  oneYearChange: string;
-  oneYearChangeExact: number;
+  yearChange: string;
+  yearChangeExact: number;
   fiveYearChange: string;
   fiveYearChangeExact: number;
   marketCap: string;
@@ -63,6 +63,7 @@ export type TStockDataItem = {
   dayChangeType: TChangeGroupType;
   weekChangeType: TChangeGroupType;
   monthChangeType: TChangeGroupType;
+  yearChangeType: TChangeGroupType;
   sixMonthHigh: string;
   sixMonthHighExact: number;
   sixMonthLow: string;
@@ -140,9 +141,16 @@ export type TStockDataItem = {
   highlights: Array<THighlights>;
   dayChangeDeltaType: string;
   preMarketChangeDeltaType: string;
+  weekChangeDeltaType: string;
+  monthChangeDeltaType: string;
+  threeMonthChangeDeltaType: string;
+  sixMonthChangeDeltaType: string;
+  yearChangeDeltaType: string;
+  fiveYearChangeDeltaType: string;
   consolidatedHighlights: Array<TConsolidatedHighlights>;
   searchTerms: string;
   freeFloatSharesPer: string;
+  freeFloatSharesPerExact: number;
   // optional
   isStarred?: boolean;
   isFnO?: boolean;
@@ -231,3 +239,9 @@ export type TConsolidatedContributorItem = {
 };
 
 export type TConsolidatedContributors = Array<TConsolidatedContributorItem>;
+
+export enum TCompareFn {
+  LTE = "LTE", // Less than equal to
+  EQ = "EQ", // Equal to
+  GTE = "GTE", // Greater than equal to
+}
