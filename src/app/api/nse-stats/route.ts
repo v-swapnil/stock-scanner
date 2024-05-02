@@ -81,7 +81,7 @@ export async function GET(request: Request) {
   try {
     const result = await handler(request);
     return result;
-  } catch (err) {
+  } catch (err: any) {
     return Response.json({ type: "error", message: err.message });
   }
 }
