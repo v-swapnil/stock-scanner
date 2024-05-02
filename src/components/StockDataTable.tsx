@@ -84,7 +84,6 @@ interface IStockDataTableProps {
   filteredWithFavorites: Array<TStockDataItem>;
   priceEarningBySector: Record<string, TSectorPriceEarningRatio>;
   showFundamentals: boolean;
-  showMonthlyChange: boolean;
   showYearlyChange: boolean;
   showMovingAverages: boolean;
   // functions
@@ -97,7 +96,6 @@ function StockDataTable({
   filteredWithFavorites,
   priceEarningBySector,
   showFundamentals,
-  showMonthlyChange,
   showYearlyChange,
   showMovingAverages,
   // functions

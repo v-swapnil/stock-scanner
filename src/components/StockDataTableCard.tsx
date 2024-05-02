@@ -33,9 +33,10 @@ import {
   TAdvanceDeclineMetric,
   TConsolidatedHighlights,
   TConsolidatedContributors,
-  TIndexData,
   TStockDataItem,
   TSectorPriceEarningRatio,
+  TIndexDataContributorItem,
+  TIndexMetric,
 } from "@/lib/types";
 import StockDataTableNew from "./StockDataTableNew";
 
@@ -48,9 +49,7 @@ function StockDataTableCard({
   data,
   priceEarningBySector,
 }: IStockDataTableCardProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
-
   const [filtered, setFiltered] = useState<Array<TStockDataItem>>(data);
   const [selectMCapIndex, setSelectedMCapIndex] = useState(0);
   const [selectedStockType, setSelectedStockType] = useState("All");
@@ -63,12 +62,182 @@ function StockDataTableCard({
   const [bankNiftyStocks, setBankNiftyStocks] = useState<Array<string>>([]);
   const [finNiftyStocks, setFinNiftyStocks] = useState<Array<string>>([]);
   const [midCapNiftyStocks, setMidCapNiftyStocks] = useState<Array<string>>([]);
-  const [indexData, setIndexData] = useState<TIndexData | null>(null);
+  const [niftyJuniorStocks, setNiftyJuniorStocks] = useState<Array<string>>([]);
+  const [indexData, setIndexData] = useState<Record<string, any>>({});
   const [marketNews, setMarkerNews] = useState([]);
   const [favoriteStocks, setFavoriteStocks] = useState<Array<string>>([]);
-
   const [searchType, setSearchType] = useState("All");
   const [searchText, setSearchText] = useState("");
+  const [niftyMetrics, setNiftyMetrics] = useState<TIndexMetric>({});
+  const [niftyBankMetrics, setNiftyBankMetrics] = useState<TIndexMetric>({});
+
+  useEffect(() => {
+    if (!searchText) {
+      setFiltered(data);
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      setFiltered(data.filter((item) => item.searchTerms.includes(searchText)));
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [data, searchText]);
+
+  useEffect(() => {
+    // Starred Stocks
+    const getFavoriteStocks = async () => {
+      const response = await axios.get("/api/favorite-stocks");
+      setFavoriteStocks(response.data || []);
+    };
+    getFavoriteStocks();
+
+    // Index Constituents
+    const getAllConstituents = async () => {
+      const response = await axios.get("/api/constituents");
+      setFnOStocks(response.data.futureAndOptions || []);
+      setNiftyStocks(response.data.nifty || []);
+      setBankNiftyStocks(response.data.niftyBank || []);
+      setFinNiftyStocks(response.data.niftyFinServices || []);
+      setMidCapNiftyStocks(response.data.niftyMidCap || []);
+      setNiftyJuniorStocks(response.data.niftyJunior || []);
+    };
+    getAllConstituents();
+
+    // Market News
+    // const getMarketNews = async () => {
+    //   const response = await axios.get("/api/news");
+    //   setMarkerNews(response.data.marketNews || []);
+    // };
+    // getMarketNews();
+  }, []);
+
+  useEffect(() => {
+    // Nifty Contributions
+    const getNiftyContributions = async () => {
+      const response = await axios.get("/api/contributors-v2?indexId=nifty");
+      const responseJson: Array<TIndexDataContributorItem> = response.data;
+
+      const pointChanged = responseJson.reduce(
+        (prev, item) => prev + item.pointchange,
+        0
+      );
+      const niftyNegative = responseJson.filter(
+        (item) => item.pointchange < 0
+      ).length;
+      const niftyPositive = 50 - niftyNegative;
+
+      const positiveContributors = responseJson
+        .filter((item) => item.pointchange > 0)
+        .sort((a, b) => b.pointchange - a.pointchange)
+        .slice(0, 4);
+      const negativeContributors = responseJson
+        .filter((item) => item.pointchange < 0)
+        .sort((a, b) => a.pointchange - b.pointchange)
+        .slice(0, 4);
+      let contributors: TConsolidatedContributors = [];
+      if (positiveContributors.length >= negativeContributors.length) {
+        contributors = positiveContributors.map((item, index) => ({
+          // Positive Symbol
+          positiveSymbol: item.symbol,
+          positivePointChanged: item.pointchange,
+          // Negative Symbol
+          negativeSymbol: negativeContributors[index]?.symbol,
+          negativePointChanged: negativeContributors[index]?.pointchange,
+        }));
+      } else {
+        contributors = negativeContributors.map((item, index) => ({
+          // Positive Symbol
+          positiveSymbol: positiveContributors[index]?.symbol,
+          positivePointChanged: positiveContributors[index]?.pointchange,
+          // Negative Symbol
+          negativeSymbol: item.symbol,
+          negativePointChanged: item.pointchange,
+        }));
+      }
+      setNiftyMetrics((prev) => ({
+        ...prev,
+        pointChanged: parseFloat(pointChanged?.toFixed(2)),
+        advanceDecline: toFixedIntegerNumber((niftyPositive / 50) * 100),
+        contributors: contributors,
+      }));
+    };
+    getNiftyContributions();
+
+    // Bank Nifty Contributions
+    const getBankNiftyContributions = async () => {
+      const response = await axios.get(
+        "/api/contributors-v2?indexId=niftyBank"
+      );
+      const responseJson: Array<TIndexDataContributorItem> = response.data;
+
+      const pointChanged = responseJson.reduce(
+        (prev, item) => prev + item.pointchange,
+        0
+      );
+      const bankNiftyNegative = responseJson.filter(
+        (item) => item.pointchange < 0
+      ).length;
+      const bankNiftyPositive = responseJson.length - bankNiftyNegative;
+
+      const positiveContributors = responseJson
+        .filter((item) => item.pointchange > 0)
+        .sort((a, b) => b.pointchange - a.pointchange)
+        .slice(0, 4);
+      const negativeContributors = responseJson
+        .filter((item) => item.pointchange < 0)
+        .sort((a, b) => a.pointchange - b.pointchange)
+        .slice(0, 4);
+      let contributors: TConsolidatedContributors = [];
+      if (positiveContributors.length >= negativeContributors.length) {
+        contributors = positiveContributors.map((item, index) => ({
+          // Positive Symbol
+          positiveSymbol: item.symbol,
+          positivePointChanged: item.pointchange,
+          // Negative Symbol
+          negativeSymbol: negativeContributors[index]?.symbol,
+          negativePointChanged: negativeContributors[index]?.pointchange,
+        }));
+      } else {
+        contributors = negativeContributors.map((item, index) => ({
+          // Positive Symbol
+          positiveSymbol: positiveContributors[index]?.symbol,
+          positivePointChanged: positiveContributors[index]?.pointchange,
+          // Negative Symbol
+          negativeSymbol: item.symbol,
+          negativePointChanged: item.pointchange,
+        }));
+      }
+      setNiftyBankMetrics((prev) => ({
+        ...prev,
+        pointChanged: parseFloat(pointChanged?.toFixed(2)),
+        advanceDecline: toFixedIntegerNumber(
+          (bankNiftyPositive / responseJson.length) * 100
+        ),
+        contributors: contributors,
+      }));
+    };
+    getBankNiftyContributions();
+
+    // Index Pricing Data
+    const getIndexPricingData = async () => {
+      const response = await axios.get("/api/indices");
+      const responseJson: Array<any> = response.data || [];
+      const niftyIndexData = responseJson.find(
+        (item) => item.indexName === "NIFTY 50"
+      );
+      const niftyBankIndexData = responseJson.find(
+        (item) => item.indexName === "NIFTY BANK"
+      );
+      setNiftyMetrics((prev) => ({
+        ...prev,
+        price: niftyIndexData?.last,
+      }));
+      setNiftyBankMetrics((prev) => ({
+        ...prev,
+        price: niftyBankIndexData?.last,
+      }));
+    };
+    getIndexPricingData();
+  }, []);
 
   const filteredWithFavorites = useMemo(() => {
     return filtered.map((item) => {
@@ -96,35 +265,68 @@ function StockDataTableCard({
     return Array.from(new Set(data.map((item) => item.industry))) || [];
   }, [data]);
 
-  const getFavoriteStocks = useCallback(async () => {
-    const response = await axios.get("/api/stocks");
-    setFavoriteStocks(response.data.favorite_stocks || []);
-  }, []);
+  const marketSentiment = useMemo(() => {
+    let positive = 0;
+    let negative = 0;
+    let noChange = 0;
+    data.forEach((item) => {
+      if (item.dayChangeExact === 0) {
+        noChange++;
+      } else if (item.dayChangeExact > 0) {
+        positive++;
+      } else {
+        negative++;
+      }
+    });
+    const positivePer = positive / data.length;
+    const negativePer = negative / data.length;
+    return positivePer > 0.6
+      ? "Positive"
+      : negativePer > 0.6
+      ? "Negative"
+      : "Neutral";
+  }, [data]);
 
-  const getFnOStockList = useCallback(async () => {
-    const response = await axios.get("/api/fno");
-    setFnOStocks(response.data.fnoStocks || []);
-  }, []);
+  const marketContributors = useMemo(() => {
+    const sorted = data.toSorted((a, b) => b.dayChangeExact - a.dayChangeExact);
+    const positiveContributors = sorted
+      .slice(0, 4)
+      .filter((item) => item.dayChangeExact > 0);
+    const negativeContributors = sorted
+      .slice(sorted.length - 4, sorted.length)
+      .filter((item) => item.dayChangeExact < 0)
+      .reverse();
+    let contributors: TConsolidatedContributors = [];
+    if (positiveContributors.length >= negativeContributors.length) {
+      contributors = positiveContributors.map((item, index) => ({
+        pointChangeSuffix: "%",
+        // Positive Symbol
+        positiveSymbol: item.name,
+        positivePointChanged: item.dayChange,
+        // Negative Symbol
+        negativeSymbol: negativeContributors[index]?.name,
+        negativePointChanged: negativeContributors[index]?.dayChange,
+      }));
+    } else {
+      contributors = negativeContributors.map((item, index) => ({
+        pointChangeSuffix: "%",
+        // Positive Symbol
+        positiveSymbol: positiveContributors[index]?.name,
+        positivePointChanged: positiveContributors[index]?.dayChange,
+        // Negative Symbol
+        negativeSymbol: item.name,
+        negativePointChanged: item.dayChange,
+      }));
+    }
+    return contributors;
+  }, [data]);
 
-  const getMarketNews = useCallback(async () => {
-    const response = await axios.get("/api/news");
-    setMarkerNews(response.data.marketNews || []);
-  }, []);
-
-  const getIndexData = useCallback(async () => {
-    const response = await axios.get("/api/contributors");
-    setIndexData(response.data);
-    setNiftyStocks(response.data.niftyConstituent);
-    setBankNiftyStocks(response.data.bankNiftyConstituent);
-    setFinNiftyStocks(response.data.finNiftyConstituent);
-    setMidCapNiftyStocks(response.data.midCapNiftyConstituent);
-  }, []);
-
-  useEffect(() => {
-    getFavoriteStocks();
-    getFnOStockList();
-    getIndexData();
-  }, [getFavoriteStocks, getFnOStockList, getIndexData]);
+  const marketAdvanceDecline = useMemo(() => {
+    const total = data.length;
+    const negative = data.filter((item) => item.dayChangeExact < 0).length;
+    const positive = total - negative;
+    return toFixedIntegerNumber((positive / total) * 100);
+  }, [data]);
 
   const onChangeStockType = useCallback(
     (newStockType: string) => {
@@ -134,6 +336,8 @@ function StockDataTableCard({
           ? favoriteStocks
           : newStockType === "Nifty"
           ? niftyStocks
+          : newStockType === "NiftyJunior"
+          ? niftyJuniorStocks
           : newStockType === "BankNifty"
           ? bankNiftyStocks
           : newStockType === "FinNifty"
@@ -151,6 +355,7 @@ function StockDataTableCard({
     [
       favoriteStocks,
       niftyStocks,
+      niftyJuniorStocks,
       bankNiftyStocks,
       finNiftyStocks,
       midCapNiftyStocks,
@@ -236,37 +441,16 @@ function StockDataTableCard({
   }, []);
 
   const onChangeFavorites = useCallback(async (stockData: TStockDataItem) => {
-    const response = await axios.patch("/api/stocks", {
-      stock_id: stockData.name,
-    });
-    setFavoriteStocks(response.data.favorite_stocks);
-    // setFavoriteStocks((prevFavoriteStocks) => {
-    //   const dataIndex = prevFavoriteStocks.indexOf(stockData.name);
-    //   if (dataIndex !== -1) {
-    //     prevFavoriteStocks.splice(dataIndex, 1);
-    //   } else {
-    //     prevFavoriteStocks.push(stockData.name);
-    //   }
-    //   console.log("prevFavoriteStocks", prevFavoriteStocks);
-    //   return [...prevFavoriteStocks];
-    // });
+    const payload = { stockId: stockData.name };
+    const response = await axios.patch("/api/favorite-stocks", payload);
+    setFavoriteStocks(response.data);
   }, []);
 
   const onChangeSearchText = useCallback((newText: string) => {
     setSearchText(newText ? newText.toLowerCase() : "");
   }, []);
 
-  useEffect(() => {
-    if (!searchText) {
-      setFiltered(data);
-      return;
-    }
-    const timeoutId = setTimeout(() => {
-      setFiltered(data.filter((item) => item.searchTerms.includes(searchText)));
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [data, searchText]);
-
+  const router = useRouter();
   const onRefreshData = useCallback(() => {
     startTransition(() => {
       // Refresh the current route and fetch new data from the server without
@@ -275,176 +459,9 @@ function StockDataTableCard({
     });
   }, [router]);
 
-  const marketSentiment = useMemo(() => {
-    let positive = 0;
-    let negative = 0;
-    let noChange = 0;
-    data.forEach((item) => {
-      if (item.dayChangeExact === 0) {
-        noChange++;
-      } else if (item.dayChangeExact > 0) {
-        positive++;
-      } else {
-        negative++;
-      }
-    });
-    const positivePer = positive / data.length;
-    const negativePer = negative / data.length;
-    return positivePer > 0.6
-      ? "Positive"
-      : negativePer > 0.6
-      ? "Negative"
-      : "Neutral";
-  }, [data]);
-
-  const marketContributors = useMemo(() => {
-    const sorted = data.toSorted((a, b) => b.dayChangeExact - a.dayChangeExact);
-    const positiveContributors = sorted
-      .slice(0, 4)
-      .filter((item) => item.dayChangeExact > 0);
-    const negativeContributors = sorted
-      .slice(sorted.length - 4, sorted.length)
-      .filter((item) => item.dayChangeExact < 0)
-      .reverse();
-    let contributors: TConsolidatedContributors = [];
-    if (positiveContributors.length >= negativeContributors.length) {
-      contributors = positiveContributors.map((item, index) => ({
-        pointChangeSuffix: "%",
-        // Positive Symbol
-        positiveSymbol: item.name,
-        positivePointChanged: item.dayChange,
-        // Negative Symbol
-        negativeSymbol: negativeContributors[index]?.name,
-        negativePointChanged: negativeContributors[index]?.dayChange,
-      }));
-    } else {
-      contributors = negativeContributors.map((item, index) => ({
-        pointChangeSuffix: "%",
-        // Positive Symbol
-        positiveSymbol: positiveContributors[index]?.name,
-        positivePointChanged: positiveContributors[index]?.dayChange,
-        // Negative Symbol
-        negativeSymbol: item.name,
-        negativePointChanged: item.dayChange,
-      }));
-    }
-    return contributors;
-  }, [data]);
-
-  const niftyContributors = useMemo(() => {
-    if (!indexData) {
-      return [];
-    }
-    const positiveContributors = indexData.niftyContributors
-      .filter((item) => item.pointchange > 0)
-      .sort((a, b) => b.pointchange - a.pointchange)
-      .slice(0, 4);
-    const negativeContributors = indexData.niftyContributors
-      .filter((item) => item.pointchange < 0)
-      .sort((a, b) => a.pointchange - b.pointchange)
-      .slice(0, 4);
-    let contributors: TConsolidatedContributors = [];
-    if (positiveContributors.length >= negativeContributors.length) {
-      contributors = positiveContributors.map((item, index) => ({
-        // Positive Symbol
-        positiveSymbol: item.symbol,
-        positivePointChanged: item.pointchange,
-        // Negative Symbol
-        negativeSymbol: negativeContributors[index]?.symbol,
-        negativePointChanged: negativeContributors[index]?.pointchange,
-      }));
-    } else {
-      contributors = negativeContributors.map((item, index) => ({
-        // Positive Symbol
-        positiveSymbol: positiveContributors[index]?.symbol,
-        positivePointChanged: positiveContributors[index]?.pointchange,
-        // Negative Symbol
-        negativeSymbol: item.symbol,
-        negativePointChanged: item.pointchange,
-      }));
-    }
-    return contributors;
-  }, [indexData]);
-
-  const bankNiftyContributors = useMemo(() => {
-    if (!indexData) {
-      return [];
-    }
-    const positiveContributors = indexData.bankNiftyContributors
-      .filter((item) => item.pointchange > 0)
-      .sort((a, b) => b.pointchange - a.pointchange)
-      .slice(0, 4);
-    const negativeContributors = indexData.bankNiftyContributors
-      .filter((item) => item.pointchange < 0)
-      .sort((a, b) => a.pointchange - b.pointchange)
-      .slice(0, 4);
-    let contributors: TConsolidatedContributors = [];
-    if (positiveContributors.length >= negativeContributors.length) {
-      contributors = positiveContributors.map((item, index) => ({
-        // Positive Symbol
-        positiveSymbol: item.symbol,
-        positivePointChanged: item.pointchange,
-        // Negative Symbol
-        negativeSymbol: negativeContributors[index]?.symbol,
-        negativePointChanged: negativeContributors[index]?.pointchange,
-      }));
-    } else {
-      contributors = negativeContributors.map((item, index) => ({
-        // Positive Symbol
-        positiveSymbol: positiveContributors[index]?.symbol,
-        positivePointChanged: positiveContributors[index]?.pointchange,
-        // Negative Symbol
-        negativeSymbol: item.symbol,
-        negativePointChanged: item.pointchange,
-      }));
-    }
-    return contributors;
-  }, [indexData]);
-
-  const advanceDeclineMetric = useMemo(() => {
-    const total = data.length;
-    const negative = data.filter((item) => item.dayChangeExact < 0).length;
-    const positive = total - negative;
-    //
-    const niftyNegative = indexData
-      ? indexData.niftyContributors.filter((item) => item.pointchange < 0)
-          .length
-      : 0;
-    const niftyPositive = 50 - niftyNegative;
-    //
-    const bankNiftyNegative = indexData
-      ? indexData.bankNiftyContributors.filter((item) => item.pointchange < 0)
-          .length
-      : 0;
-    const bankNiftyPositive = indexData
-      ? indexData.bankNiftyContributors.length - bankNiftyNegative
-      : 0;
-    return {
-      marketAdvanceDecline: toFixedIntegerNumber((positive / total) * 100),
-      niftyAdvanceDecline: indexData
-        ? toFixedIntegerNumber((niftyPositive / 50) * 100)
-        : null,
-      bankNiftyAdvanceDecline: indexData
-        ? toFixedIntegerNumber(
-            (bankNiftyPositive / indexData.bankNiftyContributors.length) * 100
-          )
-        : null,
-    } as TAdvanceDeclineMetric;
-  }, [data, indexData]);
-
-  const viewController = useMemo(() => {
-    return {
-      showFundamentals: selectedViews.includes("Fundamentals"),
-      showMonthlyChange: selectedViews.includes("MonthlyChange"),
-      showYearlyChange: selectedViews.includes("YearlyChange"),
-      showMovingAverages: selectedViews.includes("MA"),
-    };
-  }, [selectedViews]);
-
-  const showFundamentals = viewController.showFundamentals;
-  const showMonthlyChange = viewController.showMonthlyChange;
-  const showYearlyChange = viewController.showYearlyChange;
-  const showMovingAverages = viewController.showMovingAverages;
+  const showFundamentals = selectedViews.includes("Fundamentals");
+  const showYearlyChange = selectedViews.includes("YearlyChange");
+  const showMovingAverages = selectedViews.includes("MovingAverages");
 
   return (
     <>
@@ -454,24 +471,24 @@ function StockDataTableCard({
           price={marketSentiment}
           pointsChanged={null}
           contributors={marketContributors}
-          advanceDecline={advanceDeclineMetric.marketAdvanceDecline}
+          advanceDecline={marketAdvanceDecline}
           canRefresh
           isRefreshing={isPending}
           onRefresh={onRefreshData}
         />
         <IndexInsights
           title="Nifty"
-          price={numberFormat(indexData?.niftyPrice || 0)}
-          pointsChanged={indexData?.niftyPointChanged || null}
-          contributors={niftyContributors}
-          advanceDecline={advanceDeclineMetric.niftyAdvanceDecline}
+          price={niftyMetrics.price || "-"}
+          pointsChanged={niftyMetrics.pointChanged || null}
+          contributors={niftyMetrics.contributors || []}
+          advanceDecline={niftyMetrics.advanceDecline || null}
         />
         <IndexInsights
           title="Bank Nifty"
-          price={numberFormat(indexData?.bankNiftyPrice || 0)}
-          pointsChanged={indexData?.bankNiftyPointChange || null}
-          contributors={bankNiftyContributors}
-          advanceDecline={advanceDeclineMetric.bankNiftyAdvanceDecline}
+          price={niftyBankMetrics.price || "-"}
+          pointsChanged={niftyBankMetrics.pointChanged || null}
+          contributors={niftyBankMetrics.contributors || []}
+          advanceDecline={niftyBankMetrics.advanceDecline || null}
         />
       </Flex>
       <Card className="mt-4">
@@ -514,13 +531,12 @@ function StockDataTableCard({
               <MultiSelectItem value="Fundamentals">
                 Fundamentals
               </MultiSelectItem>
-              <MultiSelectItem value="MonthlyChange">
-                Monthly Change
-              </MultiSelectItem>
               <MultiSelectItem value="YearlyChange">
                 Yearly Change
               </MultiSelectItem>
-              <MultiSelectItem value="MA">Moving Averages</MultiSelectItem>
+              <MultiSelectItem value="MovingAverages">
+                Moving Averages
+              </MultiSelectItem>
             </MultiSelect>
             <Select
               value={selectedChangeType}
@@ -528,34 +544,13 @@ function StockDataTableCard({
               enableClear={false}
             >
               <SelectItem value="All">All</SelectItem>
-              <SelectItem value="Crazy Selling">
-                Crazy Selling
-                {/* (-5% or less ) */}
-              </SelectItem>
-              <SelectItem value="Heavy Selling">
-                Heavy Selling
-                {/* (-2.5% ~ -5%) */}
-              </SelectItem>
-              <SelectItem value="Moderate Selling">
-                Moderate Selling
-                {/* (-0.25% ~ -2.5%) */}
-              </SelectItem>
-              <SelectItem value="Neutral">
-                Neutral
-                {/* (-0.25% ~ 0.25%) */}
-              </SelectItem>
-              <SelectItem value="Moderate Buying">
-                Moderate Buying
-                {/* (0.25% ~ 2.5%) */}
-              </SelectItem>
-              <SelectItem value="Heavy Buying">
-                Heavy Buying
-                {/* (0.5% ~ 5%) */}
-              </SelectItem>
-              <SelectItem value="Crazy Buying">
-                Crazy Buying
-                {/* (5% or more) */}
-              </SelectItem>
+              <SelectItem value="Crazy Selling">Crazy Selling</SelectItem>
+              <SelectItem value="Heavy Selling">Heavy Selling</SelectItem>
+              <SelectItem value="Moderate Selling">Moderate Selling</SelectItem>
+              <SelectItem value="Neutral">Neutral</SelectItem>
+              <SelectItem value="Moderate Buying">Moderate Buying</SelectItem>
+              <SelectItem value="Heavy Buying">Heavy Buying</SelectItem>
+              <SelectItem value="Crazy Buying">Crazy Buying</SelectItem>
             </Select>
             <Select
               value={selectedHighlight}
@@ -592,6 +587,7 @@ function StockDataTableCard({
               <SelectItem value="Cash">Cash</SelectItem>
               <SelectItem value="FnO">Future and Options</SelectItem>
               <SelectItem value="Nifty">Nifty</SelectItem>
+              <SelectItem value="NiftyJunior">Nifty Junior</SelectItem>
               <SelectItem value="BankNifty">Bank Nifty</SelectItem>
               <SelectItem value="FinNifty">Finance Nifty</SelectItem>
               <SelectItem value="MidCapNifty">MidCap Nifty</SelectItem>
@@ -634,7 +630,6 @@ function StockDataTableCard({
           filteredWithFavorites={filteredWithFavorites}
           priceEarningBySector={priceEarningBySector}
           showFundamentals={showFundamentals}
-          showMonthlyChange={showMonthlyChange}
           showYearlyChange={showYearlyChange}
           showMovingAverages={showMovingAverages}
           // functions

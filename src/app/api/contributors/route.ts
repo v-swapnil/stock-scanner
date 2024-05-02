@@ -7,28 +7,35 @@ const finNiftyUrl =
 const midCapNiftyUrl =
   "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20MIDCAP%20SELECT.json";
 
-function getIndexPrice(data, pointChange) {
+type TResponseJson = Array<{
+  symbol: string;
+  NewIndexValue: number;
+  pointchange: number;
+}>;
+
+function getIndexPrice(data: TResponseJson, pointChange: number) {
   return parseFloat((data[0].NewIndexValue + pointChange)?.toFixed(2));
 }
 
 async function handler() {
   // Nifty Index Contributors
   const niftyResponse = await fetch(niftyUrl, { cache: "no-store" });
-  const niftyResponseJson = await niftyResponse.json();
+  const niftyResponseJson: TResponseJson = await niftyResponse.json();
 
   // Bank Nifty Index Contributors
   const bankNiftyResponse = await fetch(bankNiftyUrl, { cache: "no-store" });
-  const bankNiftyResponseJson = await bankNiftyResponse.json();
+  const bankNiftyResponseJson: TResponseJson = await bankNiftyResponse.json();
 
   // Fin Nifty Index Contributors
   const finNiftyResponse = await fetch(finNiftyUrl, { cache: "no-store" });
-  const finNiftyResponseJson = await finNiftyResponse.json();
+  const finNiftyResponseJson: TResponseJson = await finNiftyResponse.json();
 
   // MidCap Nifty Index Contributors
   const midCapNiftyResponse = await fetch(midCapNiftyUrl, {
     cache: "no-store",
   });
-  const midCapNiftyResponseJson = await midCapNiftyResponse.json();
+  const midCapNiftyResponseJson: TResponseJson =
+    await midCapNiftyResponse.json();
 
   const niftyPointChanged = niftyResponseJson.reduce(
     (prev, item) => prev + item.pointchange,

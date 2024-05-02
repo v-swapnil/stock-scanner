@@ -245,3 +245,10 @@ export enum TCompareFn {
   EQ = "EQ", // Equal to
   GTE = "GTE", // Greater than equal to
 }
+
+export type TIndexMetric = {
+  price?: string | number;
+  contributors?: TConsolidatedContributors;
+  pointChanged?: number;
+  advanceDecline?: number;
+};
