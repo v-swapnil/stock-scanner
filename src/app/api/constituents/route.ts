@@ -9,6 +9,8 @@ const indexDataUrlMappings: Record<string, string> = {
     "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20FINANCIAL%20SERVICES.json",
   niftyMidCap:
     "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20MIDCAP%20SELECT.json",
+  niftyPublicSectorEnterprises:
+    "https://iislliveblob.niftyindices.com/jsonfiles/Heatmap/FinalHeatMapNIFTY%20PSE.json",
 };
 
 async function getIndexConstituents(indexDataUrl: string) {

@@ -63,6 +63,7 @@ function StockDataTableCard({
   const [finNiftyStocks, setFinNiftyStocks] = useState<Array<string>>([]);
   const [midCapNiftyStocks, setMidCapNiftyStocks] = useState<Array<string>>([]);
   const [niftyJuniorStocks, setNiftyJuniorStocks] = useState<Array<string>>([]);
+  const [pseStocks, setPseStocks] = useState<Array<string>>([]);
   const [indexData, setIndexData] = useState<Record<string, any>>({});
   const [marketNews, setMarkerNews] = useState([]);
   const [favoriteStocks, setFavoriteStocks] = useState<Array<string>>([]);
@@ -99,6 +100,7 @@ function StockDataTableCard({
       setFinNiftyStocks(response.data.niftyFinServices || []);
       setMidCapNiftyStocks(response.data.niftyMidCap || []);
       setNiftyJuniorStocks(response.data.niftyJunior || []);
+      setPseStocks(response.data.niftyPublicSectorEnterprises || []);
     };
     getAllConstituents();
 
@@ -334,6 +336,8 @@ function StockDataTableCard({
       const list =
         newStockType === "Starred"
           ? favoriteStocks
+          : newStockType === "PSE"
+          ? pseStocks
           : newStockType === "Nifty"
           ? niftyStocks
           : newStockType === "NiftyJunior"
@@ -354,6 +358,7 @@ function StockDataTableCard({
     },
     [
       favoriteStocks,
+      pseStocks,
       niftyStocks,
       niftyJuniorStocks,
       bankNiftyStocks,
@@ -585,12 +590,13 @@ function StockDataTableCard({
               <SelectItem value="All">All</SelectItem>
               <SelectItem value="Starred">Starred</SelectItem>
               <SelectItem value="Cash">Cash</SelectItem>
+              <SelectItem value="PSE">PSE</SelectItem>
               <SelectItem value="FnO">Future and Options</SelectItem>
               <SelectItem value="Nifty">Nifty</SelectItem>
               <SelectItem value="NiftyJunior">Nifty Junior</SelectItem>
-              <SelectItem value="BankNifty">Bank Nifty</SelectItem>
-              <SelectItem value="FinNifty">Finance Nifty</SelectItem>
-              <SelectItem value="MidCapNifty">MidCap Nifty</SelectItem>
+              <SelectItem value="BankNifty">Nifty Bank</SelectItem>
+              <SelectItem value="FinNifty">Nifty Finance</SelectItem>
+              <SelectItem value="MidCapNifty">Nifty MidCap</SelectItem>
             </Select>
             <TabGroup index={selectMCapIndex} onIndexChange={onChangeMCapType}>
               <TabList variant="solid">
