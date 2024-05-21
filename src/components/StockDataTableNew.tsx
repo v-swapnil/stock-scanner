@@ -330,6 +330,7 @@ const StockDataTableNew = ({
         header: "Day Range",
         cell: ({ row }) => (
           <StockRangeBar
+            fixedWidth
             low={row.original.low}
             high={row.original.high}
             current={row.original.currentPriceExact}

@@ -496,7 +496,7 @@ function StockDataTableCard({
           advanceDecline={niftyBankMetrics.advanceDecline || null}
         />
       </Flex>
-      <Card className="mt-4">
+      <Card className="mt-4 w-[calc(100%-3rem)]">
         {/* <Accordion className="mb-6" defaultOpen={false}>
           <AccordionHeader>
             <Flex justifyContent="start">

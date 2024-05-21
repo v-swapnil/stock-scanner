@@ -14,7 +14,7 @@ const indexDataUrlMappings: Record<string, string> = {
 async function handler(indexDataUrl: string) {
   const response = await fetch(indexDataUrl, { cache: "no-store" });
   const responseJson = await response.json();
-  return Response.json(responseJson);
+  return responseJson;
 }
 
 export async function GET(request: Request) {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const searchParams = new URL(request.url).searchParams;
     const indexId = searchParams.get("indexId") || "nifty";
     const result = await handler(indexDataUrlMappings[indexId]);
-    return result;
+    return Response.json(result);
   } catch (err) {
     return Response.json({});
   }

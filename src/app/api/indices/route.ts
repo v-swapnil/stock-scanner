@@ -16,19 +16,18 @@ async function handler() {
     "NIFTY MID SELECT",
     "NIFTY PHARMA",
   ];
-  const indicesData = responseJson.data.filter((item: any) => {
-    return selectedIndices.includes(item.indexName);
-  });
+  const indicesData = responseJson.data
+    .filter((item: any) => selectedIndices.includes(item.indexName))
+    .map((item: any) => item);
 
-  return Response.json(indicesData);
+  return indicesData;
 }
 
 export async function GET() {
   try {
     const result = await handler();
-    return result;
+    return Response.json(result);
   } catch (err) {
-    console.log(err);
     return Response.json({});
   }
 }

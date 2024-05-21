@@ -9,5 +9,30 @@
 }
 
 .bg-range {
-  background: linear-gradient(90deg,#da121a,#fde642 46.88%,#078930)
+  background: linear-gradient(90deg, #da121a, #fde642 46.88%, #078930);
 }
+
+table tr > th:first-child,
+table tr > td:first-child {
+  padding-left: 0;
+}
+
+table tr > th:last-child,
+table tr > td:last-child {
+  padding-right: 0;
+}
+
+table {
+  overflow: hidden;
+}
+
+/* .stock-details-table {
+  overflow: visible !important;
+
+} */
+
+/* .stock-details-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #131A2B;
+} */

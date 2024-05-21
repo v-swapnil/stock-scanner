@@ -118,6 +118,10 @@ export type TStockDataItem = {
   dividendYieldExact: number;
   priceEarningGrowth: string;
   priceEarningGrowthExact: number;
+  forwardPriceEarning: string;
+  forwardPriceEarningExact: number;
+  priceEarningDiff: string;
+  priceEarningDiffExact: number;
   earningPerShareDilutedTTM: string;
   earningPerShareDilutedTTMExact: number;
   earningPerShareDilutedTTMGrowth: string;
@@ -156,6 +160,8 @@ export type TStockDataItem = {
   isFnO?: boolean;
   isIndex?: boolean;
 };
+
+export type TStockDataItems = Array<TStockDataItem>;
 
 export type TStockDataMetricsItem = {
   name: TChangeGroupType;
@@ -252,3 +258,26 @@ export type TIndexMetric = {
   pointChanged?: number;
   advanceDecline?: number;
 };
+
+export type TIndexDataItem = {
+  dateTime: string;
+  indexType: string;
+  indexName: string;
+  previousClose: string;
+  previousCloseExact: number;
+  open: string;
+  openExact: number;
+  last: string;
+  lastExact: number;
+  low: string;
+  lowExact: number;
+  high: string;
+  highExact: number;
+  percentageChange: number;
+  pointChange: number;
+  deltaType: string;
+  pointUpFromLow: number;
+  pointDownFromHigh: number;
+};
+
+export type TIndexDataItems = Array<TIndexDataItem>;

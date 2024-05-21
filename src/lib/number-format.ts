@@ -17,3 +17,7 @@ export function numberFormat(value: number) {
   const parsed = parseFloat(value?.toFixed(2));
   return new Intl.NumberFormat("en-IN").format(parsed);
 }
+
+export function textToNumber(value: string) {
+  return parseFloat(value.replace(",", ""));
+}

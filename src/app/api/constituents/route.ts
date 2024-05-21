@@ -39,15 +39,14 @@ async function handler() {
   const responseJson = await response.json();
   result.futureAndOptions = responseJson;
 
-  return Response.json(result);
+  return result;
 }
 
 export async function GET() {
   try {
     const result = await handler();
-    return result;
+    return Response.json(result);
   } catch (err) {
-    console.error(err);
     return Response.json({});
   }
 }

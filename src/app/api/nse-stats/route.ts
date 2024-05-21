@@ -69,18 +69,18 @@ async function handler(request: Request) {
   // await fs.rm(fileName);
   // await fs.rm(newFileName);
 
-  return Response.json({
+  return {
     header: headerRow,
     dataItems: dataRows,
     otherHeader: result.header,
     otherDataItems: result.dataItems,
-  });
+  };
 }
 
 export async function GET(request: Request) {
   try {
     const result = await handler(request);
-    return result;
+    return Response.json(result);
   } catch (err: any) {
     return Response.json({ type: "error", message: err.message });
   }

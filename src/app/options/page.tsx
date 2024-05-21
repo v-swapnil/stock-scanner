@@ -108,57 +108,6 @@ function Options() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <div>Filters</div>
-
-      <table className="options-table">
-        <thead>
-          <tr>
-            <th className="text-center" colSpan={7}>
-              Calls
-            </th>
-            <th className="text-center" colSpan={7}>
-              Puts
-            </th>
-          </tr>
-          <tr>
-            <th className="text-center">Theta</th>
-            <th className="text-center">Delta</th>
-            <th className="text-center">Price</th>
-            <th className="text-center">Bid</th>
-            <th className="text-center">Ask</th>
-            <th className="text-center">Spread</th>
-            <th className="text-center gray-bg">Strike</th>
-            <th className="text-center gray-bg">IV</th>
-            <th className="text-center">Spread</th>
-            <th className="text-center">Ask</th>
-            <th className="text-center">Bid</th>
-            <th className="text-center">Price</th>
-            <th className="text-center">Delta</th>
-            <th className="text-center">Theta</th>
-          </tr>
-        </thead>
-        <TableBody>
-          {data.map((item, index) => (
-            <tr key={item + index}>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-              <td className="text-center">No data</td>
-            </tr>
-          ))}
-        </TableBody>
-      </table>
-
       <Select
         className="w-[240px]"
         value={selectedExpiry}
@@ -172,7 +121,7 @@ function Options() {
         ))}
       </Select>
 
-      <Table className="options-table-container m-6 overflow-visible">
+      <Table className="options-table-container mx-6 overflow-visible">
         <TableHead>
           <TableRow className="border-b border-gray-800">
             <TableHeaderCell className="text-center" colSpan={7}>

@@ -1,0 +1,61 @@
+.options-table {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #2a2e39,
+    #2a2e39 1px,
+    #000 0,
+    #000 14px
+  );
+
+  position: relative;
+  z-index: 1;
+  overflow: auto !important;
+}
+
+.options-table-container table {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    theme("colors.gray.800"),
+    theme("colors.gray.800") 1px,
+    theme("colors.gray.950") 0,
+    theme("colors.gray.950") 14px
+  );
+
+  position: relative;
+  z-index: 1;
+  overflow: auto !important;
+}
+
+.options-table-container table th {
+  position: sticky;
+  top: 0;
+  background-color: theme("colors.gray.950");
+}
+
+.options-table-container table th.strike-bg,
+.options-table-container table td.strike-bg {
+  background-color: theme("colors.gray.900");
+}
+
+.options-table-container table td.itm-bg {
+  background-color: theme("colors.gray.950");
+}
+
+.options-table-container table td.atm-bg {
+  background-color: theme("colors.emerald.950");
+}
+
+.options-table th {
+  position: sticky;
+  top: 0;
+  background-color: #000;
+}
+
+.options-table th {
+  color: white;
+}
+
+.options-table td {
+  color: gray;
+  padding: 10px;
+}
