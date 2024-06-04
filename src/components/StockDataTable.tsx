@@ -171,6 +171,8 @@ function StockDataTable({
     };
   }, [filteredWithFavorites]);
 
+  const showForwardPE = true;
+
   return (
     <Table className="mt-4 stock-details-table">
       <TableHead>
@@ -190,50 +192,79 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          {/* <TableHeaderCell className="text-right">
-            <SortableColumn
-              id="priceEarningDiffExact"
-              title="PE Diff"
-              onSortItems={onSortItems}
-            />
-          </TableHeaderCell> */}
+          {showForwardPE && (
+            <>
+              <TableHeaderCell className="text-right" title="Forward PE">
+                <SortableColumn
+                  id="forwardPriceEarningExact"
+                  title="F-PE"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right" title="PE Diff">
+                <SortableColumn
+                  id="priceEarningDiffExact"
+                  title="PE Diff"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+            </>
+          )}
           {showFundamentals && (
             <>
-              <TableHeaderCell className="text-right">
+              <TableHeaderCell
+                className="text-right"
+                title="Price Earning To Growth Ratio"
+              >
                 <SortableColumn
                   id="priceEarningGrowthExact"
                   title="PEG"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">
+              <TableHeaderCell
+                className="text-right"
+                title="Price To Book Ratio"
+              >
                 <SortableColumn
                   id="priceBookTTMExact"
                   title="PB"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">
+              <TableHeaderCell className="text-right" title="Dividend Yield">
                 <SortableColumn
                   id="dividendYieldExact"
                   title="DY"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                EPS-D (G)
+              <TableHeaderCell
+                className="text-right"
+                title="Earning Per Share (Basic)"
+              >
+                EPS-B
               </TableHeaderCell>
-              <TableHeaderCell className="text-right">RG</TableHeaderCell>
-              <TableHeaderCell className="text-right">ROE</TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Earning Per Share (Diluted)"
+              >
+                EPS-D
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Earning Per Share (Diluted) Growth"
+              >
+                EPS-DG
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right" title="Revenue Growth">
+                RG
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right" title="Return On Equity">
+                ROE
+              </TableHeaderCell>
             </>
           )}
-          {/* <TableHeaderCell className="text-right">
-            <SortableColumn
-              id="preMarketChangeExact"
-              title="Pre-CG"
-              onSortItems={onSortItems}
-            />
-          </TableHeaderCell> */}
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="dayChangeExact"
@@ -287,6 +318,28 @@ function StockDataTable({
               </TableHeaderCell>
             </>
           )}
+          <TableHeaderCell className="text-right">
+            <SortableColumn
+              id="preMarketChangeExact"
+              title="Pre-CG"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
+          <TableHeaderCell className="text-left">
+            <SortableColumn
+              start
+              id="upFromDayLowExact"
+              title="Up D-Low"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
+          <TableHeaderCell className="text-right">
+            <SortableColumn
+              id="downFromDayHighExact"
+              title="Down D-High"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
           <TableHeaderCell className="text-left">
             <SortableColumn
               start
@@ -376,111 +429,126 @@ function StockDataTable({
                 neutralThreshold={75}
                 compareFn={TCompareFn.LTE}
               >
-                <div className="flex items-center gap-1">
-                  {item.priceEarningTTM}
-                  {/* <RiArrowRightLine size={12} /> */}
-                  {/* {item.forwardPriceEarning} */}
-                </div>
+                {item.priceEarningTTM}
               </BadgeColorWithThreshold>
             </TableCell>
-            {/* <TableCell className="text-right">
-              <Badge
-                color={
-                  item.priceEarningDiffExact > 2.5
-                    ? "rose"
-                    : item.priceEarningDiffExact > 0
-                    ? "orange"
-                    : "emerald"
-                }
-              >
-                {item.priceEarningDiff}
-              </Badge>
-            </TableCell> */}
+
+            {showForwardPE && (
+              <>
+                <TableCell className="text-right">
+                  <Flex justifyContent="end">
+                    <BadgeColorWithThreshold
+                      value={item.forwardPriceEarningExact}
+                      positiveThreshold={25}
+                      neutralThreshold={75}
+                      compareFn={TCompareFn.LTE}
+                    >
+                      {item.forwardPriceEarning}
+                    </BadgeColorWithThreshold>
+                  </Flex>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta
+                    deltaType={
+                      item.priceEarningDiffExact > 2.5
+                        ? "decrease"
+                        : item.priceEarningDiffExact < 0
+                        ? "increase"
+                        : "unchanged"
+                    }
+                  >
+                    {item.priceEarningDiff || "--"}
+                  </BadgeDelta>
+                </TableCell>
+              </>
+            )}
+
             {showFundamentals && (
               <>
                 <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.priceEarningGrowthExact <= 2 ? "emerald" : "rose"
-                    }
+                  <BadgeColorWithThreshold
+                    value={item.priceEarningGrowthExact}
+                    positiveThreshold={2}
+                    compareFn={TCompareFn.LTE}
                   >
                     {item.priceEarningGrowth}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge
-                    color={item.priceBookTTMExact <= 3 ? "emerald" : "rose"}
+                  <BadgeColorWithThreshold
+                    value={item.priceBookTTMExact}
+                    positiveThreshold={3}
+                    compareFn={TCompareFn.LTE}
                   >
                     {item.priceBookTTM}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.dividendYieldExact >= 8
-                        ? "emerald"
-                        : item.dividendYieldExact >= 4
-                        ? "orange"
-                        : "rose"
-                    }
+                  <BadgeColorWithThreshold
+                    value={item.dividendYieldExact}
+                    positiveThreshold={8}
+                    neutralThreshold={4}
+                    compareFn={TCompareFn.GTE}
                   >
                     {item.dividendYield ? item.dividendYield + "%" : ""}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.earningPerShareDilutedTTMGrowthExact >= 10
-                        ? "emerald"
-                        : item.earningPerShareDilutedTTMGrowthExact >= 0
-                        ? "orange"
-                        : "rose"
-                    }
+                  <BadgeColorWithThreshold
+                    value={item.earningPerShareTTMExact}
+                    positiveThreshold={10}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
+                  >
+                    {item.earningPerShareTTM}
+                  </BadgeColorWithThreshold>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeColorWithThreshold
+                    value={item.earningPerShareDilutedTTMExact}
+                    positiveThreshold={10}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
                   >
                     {item.earningPerShareDilutedTTM}
-                    {item.earningPerShareDilutedTTMGrowth
-                      ? " (" + item.earningPerShareDilutedTTMGrowth + "%)"
-                      : ""}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.totalRevenueGrowthTTMExact >= 15
-                        ? "emerald"
-                        : item.totalRevenueGrowthTTMExact >= 0
-                        ? "orange"
-                        : "rose"
-                    }
+                  <BadgeColorWithThreshold
+                    value={item.earningPerShareDilutedTTMGrowthExact}
+                    positiveThreshold={10}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
+                  >
+                    {item.earningPerShareDilutedTTMGrowth
+                      ? item.earningPerShareDilutedTTMGrowth + "%"
+                      : ""}
+                  </BadgeColorWithThreshold>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeColorWithThreshold
+                    value={item.totalRevenueGrowthTTMExact}
+                    positiveThreshold={15}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
                   >
                     {item.totalRevenueGrowthTTM
                       ? item.totalRevenueGrowthTTM + "%"
                       : ""}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge
-                    color={
-                      item.returnOnEquityExact >= 15
-                        ? "emerald"
-                        : item.returnOnEquityExact >= 0
-                        ? "orange"
-                        : "rose"
-                    }
+                  <BadgeColorWithThreshold
+                    value={item.returnOnEquityExact}
+                    positiveThreshold={15}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
                   >
                     {item.returnOnEquity ? item.returnOnEquity + "%" : ""}
-                  </Badge>
+                  </BadgeColorWithThreshold>
                 </TableCell>
               </>
             )}
-            {/* <TableCell className="text-right">
-              <BadgeDelta
-                deltaType={item.preMarketChangeDeltaType}
-                isIncreasePositive={true}
-              >
-                {item.preMarketChange}%
-              </BadgeDelta>
-            </TableCell> */}
             <TableCell className="text-right">
               <BadgeDelta deltaType={item.dayChangeDeltaType}>
                 {item.dayChange}%
@@ -520,6 +588,19 @@ function StockDataTable({
                 </TableCell>
               </>
             )}
+            <TableCell className="text-right">
+              <BadgeDelta deltaType={item.preMarketChangeDeltaType}>
+                {item.preMarketChange}%
+              </BadgeDelta>
+            </TableCell>
+            <TableCell className="text-left">
+              <BadgeDelta deltaType="increase">{item.upFromDayLow}%</BadgeDelta>
+            </TableCell>
+            <TableCell className="text-right">
+              <BadgeDelta deltaType="decrease">
+                {item.downFromDayHigh}%
+              </BadgeDelta>
+            </TableCell>
             <TableCell className="text-left">
               <BadgeDelta deltaType="increase" className="mr-2">
                 {item.upFromSixMonthLow}%
@@ -553,15 +634,13 @@ function StockDataTable({
               <Badge color="gray">{item.tenDayAverageVolume}</Badge>
             </TableCell>
             <TableCell className="text-right">
-              <Flex justifyContent="end">
-                {item.volumeIncreasedBy ? (
-                  <BadgeDelta deltaType="increase">
-                    {item.volume} ({item.volumeIncreasedBy}%)
-                  </BadgeDelta>
-                ) : (
-                  <Badge color="gray">{item.volume}</Badge>
-                )}
-              </Flex>
+              {item.volumeIncreasedBy ? (
+                <BadgeDelta deltaType="increase">
+                  {item.volume} ({item.volumeIncreasedBy}%)
+                </BadgeDelta>
+              ) : (
+                <Badge color="gray">{item.volume}</Badge>
+              )}
             </TableCell>
             <TableCell>
               <Badge
@@ -590,6 +669,7 @@ function StockDataTable({
                   <MovingAverageBadge
                     className="mr-2"
                     maPrice={item.hundredDaySMA}
+                    FPE
                     maDiffPercentage={item.hundredDaySMADiff}
                   />
                   <MovingAverageBadge
@@ -645,7 +725,14 @@ function StockDataTable({
               {insights.avgPriceEarningRatio}
             </BadgeColorWithThreshold>
           </TableFooterCell>
-          {/* <TableFooterCell className="text-right"></TableFooterCell> */}
+          <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
+          {showForwardPE && (
+            <>
+              <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
+              <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
+            </>
+          )}
+
           {showFundamentals && (
             <>
               <TableFooterCell className="text-right">PEG AVG</TableFooterCell>
