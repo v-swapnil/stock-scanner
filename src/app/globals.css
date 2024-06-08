@@ -14,17 +14,46 @@
 
 table tr > th:first-child,
 table tr > td:first-child {
-  padding-left: 0;
+  /* padding-left: 0; */
 }
 
 table tr > th:last-child,
 table tr > td:last-child {
-  padding-right: 0;
+  /* padding-right: 0; */
 }
 
 table {
-  overflow: hidden;
+  /* overflow: hidden; */
 }
+
+.stock-details-table {
+  height: calc(100vh - 160px);
+}
+
+.stock-details-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #131a2b;
+  z-index: 9;
+}
+
+.stock-details-table .fixed-badge {
+  position: absolute;
+  left: 40px;
+  background-color: #030712;
+}
+
+.stock-details-table .fixed-badge-in-container {
+  position: sticky;
+  left: 0;
+  background-color: #030712;
+}
+
+/* .stock-details-table tbody tr td:first-child {
+  position: sticky;
+  left: 0;
+  background-color: #030712;
+} */
 
 /* .stock-details-table {
   overflow: visible !important;

@@ -1,4 +1,6 @@
+import ETFDataTableCard from "@/components/ETFDataTableCard";
 import InsightCard from "@/components/InsightCard";
+import MarketIndicesAnalysis from "@/components/MarketIndicesAnalysis";
 import StockDataTableCard from "@/components/StockDataTableCard";
 import {
   addStockInsights,
@@ -19,7 +21,7 @@ async function getStockData(searchParams: TPageSearchParams) {
   try {
     const response = await axios.post(dataUrl, dataPayload);
     const dataItems = response.data.data;
-    const formattedDataItems = getFormattedDataItems(dataItems);
+    const formattedDataItems = getFormattedDataItems(dataItems, true);
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
       .filter(
@@ -75,6 +77,8 @@ export default async function Home({ searchParams }: IHomePageProps) {
         data={stocksDataItems}
         priceEarningBySector={stocksMetrics.priceEarningBySector}
       />
+      <ETFDataTableCard />
+      <MarketIndicesAnalysis />
     </main>
   );
 }

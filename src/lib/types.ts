@@ -69,13 +69,15 @@ export type TStockDataItem = {
   sixMonthLow: string;
   sixMonthLowExact: number;
   oneYearHigh: string;
+  oneYearHighExact: number;
   oneYearLow: string;
+  oneYearLowExact: number;
   allTimeHigh: string;
   allTimeLow: string;
   tenDayAverageVolume: string;
   tenDayAverageVolumeExact: number;
   thirtyDayAverageVolume: string;
-  sixtyDayAverageVolume: string;
+  ninetyDayAverageVolume: string;
   volume: string;
   volumeExact: number;
   volumeDelta: number;
@@ -89,7 +91,6 @@ export type TStockDataItem = {
   preMarketChangeType: TChangeGroupType;
   preMarketVolume: number;
   preMarketVolumeExact: number;
-  perMarketVolumePer: string;
   tenDayEMA: number;
   twentyDayEMA: number;
   fiftyDayEMA: number;
@@ -124,6 +125,7 @@ export type TStockDataItem = {
   priceEarningDiffExact: number;
   earningPerShareDilutedTTM: string;
   earningPerShareDilutedTTMExact: number;
+  earningPerShareDilutedTTMPer: string;
   earningPerShareDilutedTTMGrowth: string;
   earningPerShareDilutedTTMGrowthExact: number;
   totalRevenueGrowthTTM: string;
@@ -155,6 +157,8 @@ export type TStockDataItem = {
   searchTerms: string;
   freeFloatSharesPer: string;
   freeFloatSharesPerExact: number;
+  upFromDayLow: string;
+  downFromDayHigh: string;
   // optional
   isStarred?: boolean;
   isFnO?: boolean;

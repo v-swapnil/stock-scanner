@@ -1,10 +1,4 @@
-import {
-  RiArrowDownSLine,
-  RiArrowRightLine,
-  RiArrowUpSLine,
-  RiStarFill,
-  RiStarLine,
-} from "@remixicon/react";
+import { RiStarFill, RiStarLine } from "@remixicon/react";
 import {
   Badge,
   BadgeDelta,
@@ -20,66 +14,18 @@ import {
   TableRow,
 } from "@tremor/react";
 import StockRangeBar from "./StockRangeBar";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import {
   TCompareFn,
   TSectorPriceEarningRatio,
   TStockDataItem,
 } from "@/lib/types";
 import StockHighlights from "./StockHighlights";
-import classNames from "classnames";
 import BadgeColorWithThreshold from "./BadgeColorWithThreshold";
 import { getDeltaTypeFromChangePercentage, toFixedNumber } from "@/lib/common";
 
-function SortableColumn({ id, title, start, onSortItems }: any) {
-  const [sortDirection, setSortDirection] = useState("");
-
-  const onChangeSort = useCallback(() => {
-    const newSortDirection = sortDirection === "asc" ? "desc" : "asc";
-    setSortDirection(newSortDirection);
-    onSortItems(id, newSortDirection);
-  }, [id, sortDirection, onSortItems]);
-
-  return (
-    <Flex
-      justifyContent={start ? "start" : "end"}
-      onClick={onChangeSort}
-      className="cursor-pointer"
-    >
-      {title}
-      <div className="-space-y-2 ml-2">
-        <RiArrowUpSLine
-          className={classNames(
-            "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
-            sortDirection === "desc" ? "opacity-30" : ""
-          )}
-          aria-hidden={true}
-        />
-        <RiArrowDownSLine
-          className={classNames(
-            "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
-            sortDirection === "asc" ? "opacity-30" : ""
-          )}
-          aria-hidden={true}
-        />
-      </div>
-    </Flex>
-  );
-}
-
-function MovingAverageBadge({ className, maPrice, maDiffPercentage }: any) {
-  const deltaType =
-    maDiffPercentage < 0.5 && maDiffPercentage > -0.5
-      ? "unchanged"
-      : maDiffPercentage >= 0.5
-      ? "increase"
-      : "decrease";
-  return (
-    <BadgeDelta className={className} deltaType={deltaType}>
-      {maPrice} ({maDiffPercentage}%)
-    </BadgeDelta>
-  );
-}
+import SortableColumn from "./SortableColumn";
+import MovingAverageBadge from "./MovingAverageBadge";
 
 interface IStockDataTableProps {
   filteredWithFavorites: Array<TStockDataItem>;
@@ -171,13 +117,11 @@ function StockDataTable({
     };
   }, [filteredWithFavorites]);
 
-  const showForwardPE = true;
-
   return (
-    <Table className="mt-4 stock-details-table">
+    <Table className="mt-4 stock-details-table dark:bg-gray-950">
       <TableHead>
         <TableRow className="bg-tremor-background-muted dark:bg-dark-tremor-background-muted">
-          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell>Details</TableHeaderCell>
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="currentPriceExact"
@@ -192,7 +136,7 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          {showForwardPE && (
+          {showFundamentals && (
             <>
               <TableHeaderCell className="text-right" title="Forward PE">
                 <SortableColumn
@@ -208,10 +152,6 @@ function StockDataTable({
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
-            </>
-          )}
-          {showFundamentals && (
-            <>
               <TableHeaderCell
                 className="text-right"
                 title="Price Earning To Growth Ratio"
@@ -238,12 +178,6 @@ function StockDataTable({
                   title="DY"
                   onSortItems={onSortItems}
                 />
-              </TableHeaderCell>
-              <TableHeaderCell
-                className="text-right"
-                title="Earning Per Share (Basic)"
-              >
-                EPS-B
               </TableHeaderCell>
               <TableHeaderCell
                 className="text-right"
@@ -296,7 +230,7 @@ function StockDataTable({
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="sixMonthChangeExact"
-              title="6M Change"
+              title="6M-CG"
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
@@ -304,15 +238,15 @@ function StockDataTable({
             <>
               <TableHeaderCell className="text-right">
                 <SortableColumn
-                  id="oneYearChangeExact"
-                  title="1Y Change"
+                  id="yearChangeExact"
+                  title="1Y-CG"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
                 <SortableColumn
                   id="fiveYearChangeExact"
-                  title="5Y Change"
+                  title="5Y-CG"
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
@@ -325,18 +259,18 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell className="text-left">
+          <TableHeaderCell className="text-left" title="Up From Day Low">
             <SortableColumn
               start
               id="upFromDayLowExact"
-              title="Up D-Low"
+              title="UDL"
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell className="text-right">
+          <TableHeaderCell className="text-right" title="Down From Day High">
             <SortableColumn
               id="downFromDayHighExact"
-              title="Down D-High"
+              title="DDH"
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
@@ -363,19 +297,18 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell>
+          <TableHeaderCell title="Free Float Shares">
             <SortableColumn
               id="freeFloatSharesPerExact"
-              title="FFS %"
+              title="FFS"
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
           <TableHeaderCell className="text-left">Avg Volume</TableHeaderCell>
           <TableHeaderCell className="text-right">Volume</TableHeaderCell>
-          <TableHeaderCell>Sector</TableHeaderCell>
           {showMovingAverages && (
             <>
-              <TableHeaderCell className="text-right">
+              <TableHeaderCell className="text-left">
                 SMA (50, 100 and 200)
               </TableHeaderCell>
               <TableHeaderCell className="text-right">
@@ -383,6 +316,7 @@ function StockDataTable({
               </TableHeaderCell>
             </>
           )}
+          <TableHeaderCell>Sector</TableHeaderCell>
           <TableHeaderCell className="text-right">Highlights</TableHeaderCell>
           <TableHeaderCell className="text-right">Day Range</TableHeaderCell>
         </TableRow>
@@ -392,7 +326,11 @@ function StockDataTable({
           <TableRow key={item.name}>
             <TableCell>
               <Flex justifyContent="start">
-                {item.description} ({item.name})
+                {/* <Badge className="fixed-badge">{item.name}</Badge> */}
+                {item.description}
+                <Badge className="ml-2 fixed-badge-in-container">
+                  {item.name}
+                </Badge>
                 <BadgeColorWithThreshold
                   className="ml-2"
                   value={item.mCapType}
@@ -432,8 +370,7 @@ function StockDataTable({
                 {item.priceEarningTTM}
               </BadgeColorWithThreshold>
             </TableCell>
-
-            {showForwardPE && (
+            {showFundamentals && (
               <>
                 <TableCell className="text-right">
                   <Flex justifyContent="end">
@@ -460,11 +397,6 @@ function StockDataTable({
                     {item.priceEarningDiff || "--"}
                   </BadgeDelta>
                 </TableCell>
-              </>
-            )}
-
-            {showFundamentals && (
-              <>
                 <TableCell className="text-right">
                   <BadgeColorWithThreshold
                     value={item.priceEarningGrowthExact}
@@ -494,24 +426,12 @@ function StockDataTable({
                   </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
-                  <BadgeColorWithThreshold
-                    value={item.earningPerShareTTMExact}
-                    positiveThreshold={10}
-                    neutralThreshold={0}
-                    compareFn={TCompareFn.GTE}
-                  >
-                    {item.earningPerShareTTM}
-                  </BadgeColorWithThreshold>
-                </TableCell>
-                <TableCell className="text-right">
-                  <BadgeColorWithThreshold
-                    value={item.earningPerShareDilutedTTMExact}
-                    positiveThreshold={10}
-                    neutralThreshold={0}
-                    compareFn={TCompareFn.GTE}
-                  >
-                    {item.earningPerShareDilutedTTM}
-                  </BadgeColorWithThreshold>
+                  <Badge>
+                    {item.earningPerShareDilutedTTM}{" "}
+                    {item.earningPerShareDilutedTTMPer
+                      ? "(" + item.earningPerShareDilutedTTMPer + "%)"
+                      : ""}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <BadgeColorWithThreshold
@@ -642,25 +562,9 @@ function StockDataTable({
                 <Badge color="gray">{item.volume}</Badge>
               )}
             </TableCell>
-            <TableCell>
-              <Badge
-                className="cursor-pointer mr-2"
-                color="sky"
-                onClick={() => onChangeSector(item.sector, true)}
-              >
-                {item.sector}
-              </Badge>
-              <Badge
-                className="cursor-pointer"
-                color="sky"
-                onClick={() => onChangeSector(item.industry)}
-              >
-                {item.industry}
-              </Badge>
-            </TableCell>
             {showMovingAverages && (
               <>
-                <TableCell className="text-right">
+                <TableCell className="text-left">
                   <MovingAverageBadge
                     className="mr-2"
                     maPrice={item.fiftyDaySMA}
@@ -697,6 +601,22 @@ function StockDataTable({
                 </TableCell>
               </>
             )}
+            <TableCell>
+              <Badge
+                className="cursor-pointer mr-2"
+                color="sky"
+                onClick={() => onChangeSector(item.sector, true)}
+              >
+                {item.sector}
+              </Badge>
+              <Badge
+                className="cursor-pointer"
+                color="sky"
+                onClick={() => onChangeSector(item.industry)}
+              >
+                {item.industry}
+              </Badge>
+            </TableCell>
             <TableCell className="text-right">
               <StockHighlights highlights={item.consolidatedHighlights} />
             </TableCell>
@@ -713,7 +633,7 @@ function StockDataTable({
       </TableBody>
       <TableFoot>
         <TableRow className="bg-tremor-background-muted dark:bg-dark-tremor-background-muted">
-          <TableFooterCell>Average</TableFooterCell>
+          <TableFooterCell className="text-left">Average</TableFooterCell>
           <TableFooterCell className="text-right"></TableFooterCell>
           <TableFooterCell className="text-right">
             <BadgeColorWithThreshold
@@ -725,71 +645,72 @@ function StockDataTable({
               {insights.avgPriceEarningRatio}
             </BadgeColorWithThreshold>
           </TableFooterCell>
-          <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
-          {showForwardPE && (
-            <>
-              <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
-              <TableFooterCell className="text-right">FPE AVG</TableFooterCell>
-            </>
-          )}
-
           {showFundamentals && (
             <>
-              <TableFooterCell className="text-right">PEG AVG</TableFooterCell>
-              <TableFooterCell className="text-right">PB AVG</TableFooterCell>
-              <TableFooterCell className="text-right">DY AVG</TableFooterCell>
-              EPS-D (G) AVG
-              <TableFooterCell className="text-right">RG AVG</TableFooterCell>
-              <TableFooterCell className="text-right">ROE AVG</TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
             </>
           )}
           <TableFooterCell className="text-right">
             <BadgeDelta deltaType={insights.avgDayChangeDeltaType}>
-              {insights.avgDayChange}
+              {insights.avgDayChange}%
             </BadgeDelta>
           </TableFooterCell>
           <TableFooterCell className="text-right">
             <BadgeDelta deltaType={insights.avgWeekChangeDeltaType}>
-              {insights.avgWeekChange}
+              {insights.avgWeekChange}%
             </BadgeDelta>
           </TableFooterCell>
           <TableFooterCell className="text-right">
             <BadgeDelta deltaType={insights.avgMonthChangeDeltaType}>
-              {insights.avgMonthChange}
+              {insights.avgMonthChange}%
             </BadgeDelta>
           </TableFooterCell>
           <TableFooterCell className="text-right">
             <BadgeDelta deltaType={insights.avgThreeMonthChangeDeltaType}>
-              {insights.avgThreeMonthChange}
+              {insights.avgThreeMonthChange}%
             </BadgeDelta>
           </TableFooterCell>
           <TableFooterCell className="text-right">
             <BadgeDelta deltaType={insights.avgThreeMonthChangeDeltaType}>
-              {insights.avgSixMonthChange}
+              {insights.avgSixMonthChange}%
             </BadgeDelta>
           </TableFooterCell>
           {showYearlyChange && (
             <>
-              <TableFooterCell className="text-right">6M AVG</TableFooterCell>
-              <TableFooterCell className="text-right">1Y AVG</TableFooterCell>
-              <TableFooterCell className="text-right">5Y AVG</TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
             </>
           )}
+          <TableFooterCell className="text-right">
+            <BadgeDelta deltaType={insights.avgPreMarketChangeDeltaType}>
+              {insights.avgPreMarketChange}%
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-right"></TableFooterCell>
-          <TableFooterCell className="text-left"></TableFooterCell>
-          <TableFooterCell></TableFooterCell>
-          <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-right"></TableFooterCell>
-          <TableFooterCell></TableFooterCell>
           {showMovingAverages && (
             <>
-              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
               <TableFooterCell className="text-right"></TableFooterCell>
             </>
           )}
+          <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-right"></TableFooterCell>
-          <TableFooterCell></TableFooterCell>
+          <TableFooterCell className="text-right"></TableFooterCell>
         </TableRow>
       </TableFoot>
     </Table>
