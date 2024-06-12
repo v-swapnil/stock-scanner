@@ -9,12 +9,18 @@ async function handler() {
     "NIFTY NEXT 50",
     "NIFTY MIDCAP 150",
     "NIFTY SMLCAP 250",
+    "NIFTY MICROCAP250",
+    "NIFTY 500",
+    "NIFTY TOTAL MKT",
     "NIFTY IT",
     "NIFTY BANK",
     "NIFTY AUTO",
     "NIFTY FIN SERVICE",
     "NIFTY MID SELECT",
     "NIFTY PHARMA",
+    "NIFTY FMCG",
+    "NIFTY METAL",
+    "NIFTY CONSUMPTION"
   ];
   const indicesData = responseJson.data
     .filter((item: any) => selectedIndices.includes(item.indexName))

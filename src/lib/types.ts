@@ -44,9 +44,15 @@ export type TStockDataItem = {
   currentPriceExact: number;
   dayChangeAbs: string;
   dayChange: string;
+  oneWeekLow: string;
+  oneWeekLowExact: number;
+  oneWeekHigh: string;
+  oneWeekHighExact: number;
   dayChangeExact: number;
+  currentWeekChange: string;
   weekChange: string;
   weekChangeExact: number;
+  currentMonthChange: string;
   monthChange: string;
   monthChangeExact: number;
   threeMonthChange: string;
@@ -61,7 +67,9 @@ export type TStockDataItem = {
   marketCapExact: number;
   marketCapInBillions: number;
   dayChangeType: TChangeGroupType;
+  currentWeekChangeType: TChangeGroupType;
   weekChangeType: TChangeGroupType;
+  currentMonthChangeType: TChangeGroupType;
   monthChangeType: TChangeGroupType;
   yearChangeType: TChangeGroupType;
   sixMonthHigh: string;

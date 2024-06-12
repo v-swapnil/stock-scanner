@@ -16,6 +16,7 @@ import classNames from "classnames";
 import { useEffect, useMemo, useState } from "react";
 
 import sample from "./sample.json";
+import sample2 from "./sample-2.json";
 
 function Options() {
   const [optionExpiries, setOptionExpiries] = useState<any[]>([]);
@@ -105,6 +106,20 @@ function Options() {
   const atmIndex = optionDataItems.length / 2;
 
   const data = new Array(20).fill(0);
+
+  const sample2Updates = useMemo(() => {
+    return sample2.map((item) => ({
+      ...item,
+      putIntrinsicValue:
+        item.strikePrice - item.PE.underlyingValue < 0
+          ? 0
+          : item.strikePrice - item.PE.underlyingValue,
+      callIntrinsicValue:
+        item.PE.underlyingValue - item.strikePrice < 0
+          ? 0
+          : item.PE.underlyingValue - item.strikePrice,
+    }));
+  }, []);
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -267,6 +282,60 @@ function Options() {
           ))}
         </TableBody>
       </Table>
+
+      <table
+        style={{
+          background: "white",
+        }}
+      >
+        <thead>
+          <tr>
+            <th colSpan={3}>CALL</th>
+            <th></th>
+            <th colSpan={3}>PUT</th>
+          </tr>
+          <tr>
+            <th>OI</th>
+            <th>IV</th>
+            <th>LTP</th>
+            <th>INTRINSIC VALUE</th>
+            <th>PREMIUM</th>
+            <th>STRIKE</th>
+            <th>PREMIUM</th>
+            <th>INTRINSIC VALUE</th>
+            <th>LTP</th>
+            <th>IV</th>
+            <th>OI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sample2Updates.map((item) => (
+            <tr
+              key={item.strikePrice}
+              style={{
+                textAlign: "center",
+                background: item.strikePrice === 23300 ? "gray" : "",
+              }}
+            >
+              <td>{item.CE.openInterest}</td>
+              <td>{item.CE.impliedVolatility}</td>
+              <td>{item.CE.lastPrice?.toFixed(2)}</td>
+              <td>{item.callIntrinsicValue?.toFixed(2)}</td>
+              <td>
+                {(item.CE.lastPrice - item.callIntrinsicValue)?.toFixed(2)}
+              </td>
+              <td>
+                <strong>{item.strikePrice}</strong>
+              </td>
+              <td>{(item.PE.lastPrice - item.putIntrinsicValue).toFixed(2)}</td>
+              <td>{item.putIntrinsicValue?.toFixed(2)}</td>
+              <td>{item.PE.lastPrice?.toFixed(2)}</td>
+              <td>{item.PE.impliedVolatility}</td>
+              <td>{item.PE.openInterest}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </main>
   );
 }

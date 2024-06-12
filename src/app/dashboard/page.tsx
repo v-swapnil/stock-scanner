@@ -1,3 +1,5 @@
+"use client";
+
 import ETFDataTableCard from "@/components/ETFDataTableCard";
 import InsightCard from "@/components/InsightCard";
 import MarketIndicesAnalysis from "@/components/MarketIndicesAnalysis";
@@ -5,12 +7,18 @@ import StockDataTableCard from "@/components/StockDataTableCard";
 import {
   addStockInsights,
   getFormattedDataItems,
+  getFormattedIndices,
   getMetricsFromStockData,
   getPayloadForRequest,
 } from "@/lib/data-format";
-import { TPageSearchParams, TStockDataItems } from "@/lib/types";
+import {
+  TIndexDataItems,
+  TPageSearchParams,
+  TStockDataItems,
+} from "@/lib/types";
 import { Flex } from "@tremor/react";
 import axios from "axios";
+import { useState, useEffect, useMemo } from "react";
 
 async function getStockData(searchParams: TPageSearchParams) {
   const marketCapInBillions = searchParams.market_cap_in_billions
@@ -21,7 +29,7 @@ async function getStockData(searchParams: TPageSearchParams) {
   try {
     const response = await axios.post(dataUrl, dataPayload);
     const dataItems = response.data.data;
-    const formattedDataItems = getFormattedDataItems(dataItems, true);
+    const formattedDataItems = getFormattedDataItems(dataItems);
     const filteredDataItems = formattedDataItems
       // Remove Expensive Stocks
       .filter(
@@ -57,9 +65,28 @@ interface IHomePageProps {
   searchParams: TPageSearchParams;
 }
 
-export default async function Home({ searchParams }: IHomePageProps) {
-  const stocksDataItems = await getStockData(searchParams);
-  const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
+function Home({ searchParams }: IHomePageProps) {
+  const [isLoading, setLoading] = useState(true);
+  const [stocksDataItems, setStocksDataItems] = useState([]);
+
+  useEffect(() => {
+    const getStockData = async () => {
+      const response = await axios.get(
+        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString()
+      );
+      setStocksDataItems(response.data || []);
+      setLoading(false);
+    };
+    getStockData();
+  }, [searchParams]);
+
+  const stocksMetrics = useMemo(() => {
+    return getMetricsFromStockData(stocksDataItems || []);
+  }, [stocksDataItems]);
+
+  // const stocksDataItems = await getStockData(searchParams);
+  // const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
       <Flex className="px-2">
@@ -82,3 +109,5 @@ export default async function Home({ searchParams }: IHomePageProps) {
     </main>
   );
 }
+
+export default Home;

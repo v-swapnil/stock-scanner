@@ -206,3 +206,13 @@ export function getConsolidatedHighlights(highlights: Array<THighlights>) {
 export function getSearchTerms(stockDetails: TStockDataItem) {
   return `${stockDetails.name.toLowerCase()}:${stockDetails.description.toLowerCase()}:${stockDetails.sector.toLowerCase()}:${stockDetails.industry.toLowerCase()}`;
 }
+
+export function getStockRangeDetails(
+  currentPrice: number,
+  lowPrice: number,
+  highPrice: number
+) {
+  const upFromLow = ((currentPrice - lowPrice) / lowPrice) * 100;
+  const downFromHigh = ((highPrice - currentPrice) / highPrice) * 100;
+  return { upFromLow, downFromHigh };
+}

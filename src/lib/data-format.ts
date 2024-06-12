@@ -6,6 +6,7 @@ import {
   getDiffOfPricesInPercentage,
   getSearchTerms,
   getStockHighlights,
+  getStockRangeDetails,
   toFixedIntegerNumber,
   toFixedNumber,
 } from "./common";
@@ -72,6 +73,8 @@ function getColumnAlias(columnId: string) {
     price_52_week_low: "oneYearLowExact",
     "High.All": "allTimeHighExact",
     "Low.All": "allTimeLowExact",
+    "low|1W": "oneWeekLowExact",
+    "high|1W": "oneWeekHighExact",
 
     // Moving Averages
     EMA10: "tenDayEMAExact",
@@ -174,6 +177,8 @@ function getStockDataItemColumns() {
     "non_gaap_price_to_earnings_per_share_forecast_next_fy",
     "Perf.W",
     "Perf.1M",
+    "low|1W",
+    "high|1W",
   ];
 }
 
@@ -217,6 +222,7 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       volumeDelta: item.tenDayAverageVolumeExact - item.volume,
       currentPrice: toFixedNumber(item.close),
       currentPriceExact: item.close,
+      oneWeekLow: toFixedNumber(item.weekLowExact),
       dayChangeAbsolute: toFixedNumber(item.dayChangeAbsoluteExact),
       dayChange: toFixedNumber(item.dayChangeExact),
       currentWeekChange: toFixedNumber(item.currentWeekChangeExact),
@@ -333,11 +339,21 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     dayChangeType: getChangePercentageGroup(stockDetails.dayChange),
     weekChangeType: getChangePercentageGroup(stockDetails.weekChange),
     monthChangeType: getChangePercentageGroup(stockDetails.monthChange),
+    currentWeekChangeType: getChangePercentageGroup(
+      stockDetails.currentWeekChange
+    ),
+    currentMonthChangeType: getChangePercentageGroup(
+      stockDetails.currentMonthChange
+    ),
     highlights: getStockHighlights(stockDetails),
     upFromDayLow: "",
     upFromDayLowExact: 0,
     downFromDayHigh: "",
     downFromDayHighExact: 0,
+    upFromOneWeekLow: "",
+    upFromOneWeekLowExact: 0,
+    downFromOneWeekHigh: "",
+    downFromOneWeekHighExact: 0,
   };
   const currentPrice = stockDetails.currentPriceExact;
   if (stockDetails.low && stockDetails.high) {
@@ -374,6 +390,18 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     metrics.downFromOneYearHigh = toFixedNumber(downFromHigh);
     metrics.downFromOneYearHighExact = downFromHigh;
   }
+
+  // TODO: DO BETTER
+  const { upFromLow, downFromHigh } = getStockRangeDetails(
+    currentPrice,
+    stockDetails.oneWeekLowExact,
+    stockDetails.oneWeekHighExact
+  );
+  metrics.upFromOneWeekLow = toFixedNumber(upFromLow);
+  metrics.upFromOneWeekLowExact = upFromLow;
+  metrics.downFromOneWeekHigh = toFixedNumber(downFromHigh);
+  metrics.downFromOneWeekHighExact = downFromHigh;
+
   const volume = stockDetails.volumeExact;
   const tenDayAverageVolume = stockDetails.tenDayAverageVolumeExact;
   if (volume > tenDayAverageVolume) {
@@ -428,12 +456,12 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
       changeInsights[item.dayChangeType][0] += 1;
     }
     // Current Week
-    if (item.weekChangeType) {
-      changeInsights[item.weekChangeType][1] += 1;
+    if (item.currentWeekChangeType) {
+      changeInsights[item.currentWeekChangeType][1] += 1;
     }
     // Current Month
-    if (item.monthChangeType) {
-      changeInsights[item.monthChangeType][2] += 1;
+    if (item.currentMonthChangeType) {
+      changeInsights[item.currentMonthChangeType][2] += 1;
     }
     // Price Earning Ratios
     if (item.industry && item.priceEarningTTM) {
@@ -598,6 +626,13 @@ export function getIndexNameMappings() {
     "NIFTY REALTY": "Nifty Realty",
     "NIFTY MIDCAP 150": "Nifty MidCap 150",
     "NIFTY SMLCAP 250": "Nifty SmallCap 250",
+    "NIFTY TOTAL MARKET": "Nifty Total Market",
+    "NIFTY MICROCAP250": "Nifty MicroCap 250",
+    "NIFTY 500": "Nifty 500",
+    "NIFTY TOTAL MKT": "Nifty Total Market",
+    "NIFTY FMCG": "Nifty FMCG",
+    "NIFTY METAL": "Nifty Metal",
+    "NIFTY CONSUMPTION": "Nifty Consumption",
   };
 }
 

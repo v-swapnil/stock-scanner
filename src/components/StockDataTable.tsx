@@ -259,6 +259,13 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
+          <TableHeaderCell className="text-right">
+            <SortableColumn
+              id="preMarketVolumeExact"
+              title="Pre-Vol"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
           <TableHeaderCell className="text-left" title="Up From Day Low">
             <SortableColumn
               start
@@ -513,6 +520,9 @@ function StockDataTable({
                 {item.preMarketChange}%
               </BadgeDelta>
             </TableCell>
+            <TableCell className="text-right">
+              <Badge color="gray">{item.preMarketVolume}</Badge>
+            </TableCell>
             <TableCell className="text-left">
               <BadgeDelta deltaType="increase">{item.upFromDayLow}%</BadgeDelta>
             </TableCell>
@@ -694,6 +704,7 @@ function StockDataTable({
               {insights.avgPreMarketChange}%
             </BadgeDelta>
           </TableFooterCell>
+          <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
