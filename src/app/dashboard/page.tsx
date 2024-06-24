@@ -99,6 +99,14 @@ function Home({ searchParams }: IHomePageProps) {
           title="Month Change"
           data={stocksMetrics.monthChangeInsights}
         />
+        {/* <InsightCard
+          title="3 Month Change"
+          data={stocksMetrics.threeMonthChangeInsights}
+        />
+        <InsightCard
+          title="6 Month Change"
+          data={stocksMetrics.sixMonthChangeInsights}
+        /> */}
       </Flex>
       <StockDataTableCard
         data={stocksDataItems}

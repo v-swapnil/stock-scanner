@@ -44,10 +44,10 @@ export type TStockDataItem = {
   currentPriceExact: number;
   dayChangeAbs: string;
   dayChange: string;
-  oneWeekLow: string;
-  oneWeekLowExact: number;
-  oneWeekHigh: string;
-  oneWeekHighExact: number;
+  currentWeekLowExact: number;
+  currentWeekHighExact: number;
+  currentMonthLowExact: number;
+  currentMonthHighExact: number;
   dayChangeExact: number;
   currentWeekChange: string;
   weekChange: string;
@@ -57,6 +57,8 @@ export type TStockDataItem = {
   monthChangeExact: number;
   threeMonthChange: string;
   threeMonthChangeExact: number;
+  threeMonthLowExact: number;
+  threeMonthHighExact: number;
   sixMonthChange: string;
   sixMonthChangeExact: number;
   yearChange: string;
@@ -71,6 +73,8 @@ export type TStockDataItem = {
   weekChangeType: TChangeGroupType;
   currentMonthChangeType: TChangeGroupType;
   monthChangeType: TChangeGroupType;
+  threeMonthChangeType: TChangeGroupType;
+  sixMonthChangeType: TChangeGroupType;
   yearChangeType: TChangeGroupType;
   sixMonthHigh: string;
   sixMonthHighExact: number;
@@ -149,6 +153,18 @@ export type TStockDataItem = {
   upFromOneYearLowExact: number;
   downFromOneYearHigh: string;
   downFromOneYearHighExact: number;
+  upFromCurrentWeekLow: string;
+  upFromCurrentWeekLowExact: number;
+  downFromCurrentWeekHigh: string;
+  downFromCurrentWeekHighExact: number;
+  upFromCurrentMonthLow: string;
+  upFromCurrentMonthLowExact: number;
+  downFromCurrentMonthHigh: string;
+  downFromCurrentMonthHighExact: number;
+  upFromThreeMonthLow: string;
+  upFromThreeMonthLowExact: number;
+  downFromThreeMonthHigh: string;
+  downFromThreeMonthHighExact: number;
   highlightRed: boolean;
   highlight: boolean;
   volumeIncreasedBy: number;
@@ -165,6 +181,10 @@ export type TStockDataItem = {
   searchTerms: string;
   freeFloatSharesPer: string;
   freeFloatSharesPerExact: number;
+  currentRatioExact: number;
+  currentRatio: string;
+  debtToEquityRatioExact: number;
+  debtToEquityRatio: string;
   upFromDayLow: string;
   downFromDayHigh: string;
   // optional

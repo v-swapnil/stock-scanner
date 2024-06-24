@@ -73,8 +73,12 @@ function getColumnAlias(columnId: string) {
     price_52_week_low: "oneYearLowExact",
     "High.All": "allTimeHighExact",
     "Low.All": "allTimeLowExact",
-    "low|1W": "oneWeekLowExact",
-    "high|1W": "oneWeekHighExact",
+    "low|1W": "currentWeekLowExact",
+    "high|1W": "currentWeekHighExact",
+    "low|1M": "currentMonthLowExact",
+    "high|1M": "currentMonthHighExact",
+    "Low.3M": "threeMonthLowExact",
+    "High.3M": "threeMonthHighExact",
 
     // Moving Averages
     EMA10: "tenDayEMAExact",
@@ -102,6 +106,8 @@ function getColumnAlias(columnId: string) {
     total_revenue_yoy_growth_ttm: "totalRevenueGrowthTTMExact",
     return_on_equity: "returnOnEquityExact",
     float_shares_percent_current: "freeFloatSharesPerExact",
+    current_ratio_fq: "currentRatioExact",
+    debt_to_equity_fq: "debtToEquityRatioExact",
   };
   return columns[columnId] || columnId;
 }
@@ -116,20 +122,32 @@ function getDataWithColumnIds(columns: string[], dataItems: any[]) {
 
 function getStockDataItemColumns() {
   return [
+    "logoid",
     "name",
     "description",
-    "industry", // "sector",
+    "sector",
+    "industry",
+    "market_cap_basic",
+    "float_shares_percent_current",
     "close",
     "change_abs",
     "change",
-    "change|1W",
-    "change|1M",
+    "change|1W", // current week
+    "change|1M", // current month
+    // Performance
+    "Perf.W",
+    "Perf.1M",
     "Perf.3M",
     "Perf.6M",
     "Perf.Y",
     "Perf.5Y",
-    "market_cap_basic",
     // High / Lows
+    "high|1W",
+    "low|1W",
+    "high|1M",
+    "low|1M",
+    "High.3M",
+    "Low.3M",
     "High.6M",
     "Low.6M",
     "price_52_week_high",
@@ -163,22 +181,19 @@ function getStockDataItemColumns() {
     "SMA200",
     // Fundamentals
     "price_earnings_ttm",
-    "price_book_ratio",
-    "earnings_per_share_basic_ttm",
-    "dividend_yield_recent",
-    "sector",
     "price_earnings_growth_ttm",
+    "price_book_ratio", // price_book_fq
+    "earnings_per_share_basic_ttm",
     "earnings_per_share_diluted_ttm",
     "earnings_per_share_diluted_yoy_growth_ttm",
+    "earnings_per_share_forecast_next_fq",
+    "dividend_yield_recent", // dividends_yield_current
+    "total_revenue_ttm",
     "total_revenue_yoy_growth_ttm",
-    "return_on_equity",
-    "float_shares_percent_current",
-    "logoid",
+    "return_on_equity", // return_on_equity_fq
+    "current_ratio_fq",
+    "debt_to_equity_fq",
     "non_gaap_price_to_earnings_per_share_forecast_next_fy",
-    "Perf.W",
-    "Perf.1M",
-    "low|1W",
-    "high|1W",
   ];
 }
 
@@ -222,7 +237,6 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       volumeDelta: item.tenDayAverageVolumeExact - item.volume,
       currentPrice: toFixedNumber(item.close),
       currentPriceExact: item.close,
-      oneWeekLow: toFixedNumber(item.weekLowExact),
       dayChangeAbsolute: toFixedNumber(item.dayChangeAbsoluteExact),
       dayChange: toFixedNumber(item.dayChangeExact),
       currentWeekChange: toFixedNumber(item.currentWeekChangeExact),
@@ -301,6 +315,9 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       earningPerShareDilutedTTM: toFixedNumber(
         item.earningPerShareDilutedTTMExact
       ),
+      earningPerShareDilutedTTMPerExact: item.earningPerShareDilutedTTMExact
+        ? item.earningPerShareDilutedTTMExact / item.close
+        : 0,
       earningPerShareDilutedTTMPer: item.earningPerShareDilutedTTMExact
         ? toFixedNumber(
             (item.earningPerShareDilutedTTMExact / item.close) * 100
@@ -312,6 +329,8 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       totalRevenueGrowthTTM: toFixedNumber(item.totalRevenueGrowthTTMExact),
       returnOnEquity: toFixedNumber(item.returnOnEquityExact),
       freeFloatSharesPer: toFixedNumber(item.freeFloatSharesPerExact),
+      currentRatio: toFixedNumber(item.currentRatioExact),
+      debtToEquityRatio: toFixedNumber(item.debtToEquityRatioExact),
     }));
   return formattedDataItems;
 }
@@ -342,6 +361,10 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     currentWeekChangeType: getChangePercentageGroup(
       stockDetails.currentWeekChange
     ),
+    threeMonthChangeType: getChangePercentageGroup(
+      stockDetails.threeMonthChange
+    ),
+    sixMonthChangeType: getChangePercentageGroup(stockDetails.sixMonthChange),
     currentMonthChangeType: getChangePercentageGroup(
       stockDetails.currentMonthChange
     ),
@@ -350,10 +373,18 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     upFromDayLowExact: 0,
     downFromDayHigh: "",
     downFromDayHighExact: 0,
-    upFromOneWeekLow: "",
-    upFromOneWeekLowExact: 0,
-    downFromOneWeekHigh: "",
-    downFromOneWeekHighExact: 0,
+    upFromCurrentWeekLow: "",
+    upFromCurrentWeekLowExact: 0,
+    downFromCurrentWeekHigh: "",
+    downFromCurrentWeekHighExact: 0,
+    upFromCurrentMonthLow: "",
+    upFromCurrentMonthLowExact: 0,
+    downFromCurrentMonthHigh: "",
+    downFromCurrentMonthHighExact: 0,
+    upFromThreeMonthLow: "",
+    upFromThreeMonthLowExact: 0,
+    downFromThreeMonthHigh: "",
+    downFromThreeMonthHighExact: 0,
   };
   const currentPrice = stockDetails.currentPriceExact;
   if (stockDetails.low && stockDetails.high) {
@@ -394,13 +425,37 @@ export function addStockInsights(stockDetails: TStockDataItem) {
   // TODO: DO BETTER
   const { upFromLow, downFromHigh } = getStockRangeDetails(
     currentPrice,
-    stockDetails.oneWeekLowExact,
-    stockDetails.oneWeekHighExact
+    stockDetails.currentWeekLowExact,
+    stockDetails.currentWeekHighExact
   );
-  metrics.upFromOneWeekLow = toFixedNumber(upFromLow);
-  metrics.upFromOneWeekLowExact = upFromLow;
-  metrics.downFromOneWeekHigh = toFixedNumber(downFromHigh);
-  metrics.downFromOneWeekHighExact = downFromHigh;
+  metrics.upFromCurrentWeekLow = toFixedNumber(upFromLow);
+  metrics.upFromCurrentWeekLowExact = upFromLow;
+  metrics.downFromCurrentWeekHigh = toFixedNumber(downFromHigh);
+  metrics.downFromCurrentWeekHighExact = downFromHigh;
+
+  // TODO: DO BETTER
+  const { upFromLow: upFromMLow, downFromHigh: downFromMHigh } =
+    getStockRangeDetails(
+      currentPrice,
+      stockDetails.currentMonthLowExact,
+      stockDetails.currentMonthHighExact
+    );
+  metrics.upFromCurrentMonthLow = toFixedNumber(upFromMLow);
+  metrics.upFromCurrentMonthLowExact = upFromMLow;
+  metrics.downFromCurrentMonthHigh = toFixedNumber(downFromMHigh);
+  metrics.downFromCurrentMonthHighExact = downFromMHigh;
+
+  // TODO: DO BETTER
+  const { upFromLow: upFrom3MLow, downFromHigh: downFrom3MHigh } =
+    getStockRangeDetails(
+      currentPrice,
+      stockDetails.threeMonthLowExact,
+      stockDetails.threeMonthHighExact
+    );
+  metrics.upFromThreeMonthLow = toFixedNumber(upFrom3MLow);
+  metrics.upFromThreeMonthLowExact = upFrom3MLow;
+  metrics.downFromThreeMonthHigh = toFixedNumber(downFrom3MHigh);
+  metrics.downFromThreeMonthHighExact = downFrom3MHigh;
 
   const volume = stockDetails.volumeExact;
   const tenDayAverageVolume = stockDetails.tenDayAverageVolumeExact;
@@ -440,13 +495,13 @@ export function addStockInsights(stockDetails: TStockDataItem) {
 
 export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
   const changeInsights: Record<TChangeGroupType, Array<number>> = {
-    "Crazy Selling": [0, 0, 0],
-    "Heavy Selling": [0, 0, 0],
-    "Moderate Selling": [0, 0, 0],
-    Neutral: [0, 0, 0],
-    "Moderate Buying": [0, 0, 0],
-    "Heavy Buying": [0, 0, 0],
-    "Crazy Buying": [0, 0, 0],
+    "Crazy Selling": [0, 0, 0, 0, 0],
+    "Heavy Selling": [0, 0, 0, 0, 0],
+    "Moderate Selling": [0, 0, 0, 0, 0],
+    Neutral: [0, 0, 0, 0, 0],
+    "Moderate Buying": [0, 0, 0, 0, 0],
+    "Heavy Buying": [0, 0, 0, 0, 0],
+    "Crazy Buying": [0, 0, 0, 0, 0],
   };
   const priceEarningBySector: Record<string, TSectorPriceEarningRatio> = {};
 
@@ -462,6 +517,12 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
     // Current Month
     if (item.currentMonthChangeType) {
       changeInsights[item.currentMonthChangeType][2] += 1;
+    }
+    if (item.threeMonthChangeType) {
+      changeInsights[item.threeMonthChangeType][3] += 1;
+    }
+    if (item.sixMonthChangeType) {
+      changeInsights[item.sixMonthChangeType][4] += 1;
     }
     // Price Earning Ratios
     if (item.industry && item.priceEarningTTM) {
@@ -512,6 +573,16 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
     monthChangeInsights: keyNames.map((item, index) => ({
       name: item,
       value: changeInsights[item as TChangeGroupType][2],
+      color: colors[index],
+    })),
+    threeMonthChangeInsights: keyNames.map((item, index) => ({
+      name: item,
+      value: changeInsights[item as TChangeGroupType][3],
+      color: colors[index],
+    })),
+    sixMonthChangeInsights: keyNames.map((item, index) => ({
+      name: item,
+      value: changeInsights[item as TChangeGroupType][4],
       color: colors[index],
     })),
     priceEarningBySector: priceEarningBySector,

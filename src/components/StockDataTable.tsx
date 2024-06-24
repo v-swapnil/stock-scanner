@@ -33,6 +33,7 @@ interface IStockDataTableProps {
   showFundamentals: boolean;
   showYearlyChange: boolean;
   showMovingAverages: boolean;
+  showCurrentWeekMonthRange: boolean;
   // functions
   onSortItems: (key: string, dir: string) => void;
   onChangeSector: (sector: string, isIndustry?: boolean) => void;
@@ -45,6 +46,7 @@ function StockDataTable({
   showFundamentals,
   showYearlyChange,
   showMovingAverages,
+  showCurrentWeekMonthRange = true,
   // functions
   onSortItems,
   onChangeSector,
@@ -179,23 +181,56 @@ function StockDataTable({
                   onSortItems={onSortItems}
                 />
               </TableHeaderCell>
+              <TableHeaderCell className="text-right" title="Current Ratio">
+                <SortableColumn
+                  id="currentRatioExact"
+                  title="CR"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Debt to Equity Ratio"
+              >
+                <SortableColumn
+                  id="debtToEquityRatioExact"
+                  title="DE"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
               <TableHeaderCell
                 className="text-right"
                 title="Earning Per Share (Diluted)"
               >
-                EPS-D
+                <SortableColumn
+                  id="earningPerShareDilutedTTMPerExact"
+                  title="EPS-D"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
               <TableHeaderCell
                 className="text-right"
-                title="Earning Per Share (Diluted) Growth"
+                title="Earning per Share (Diluted) Growth"
               >
-                EPS-DG
+                <SortableColumn
+                  id="earningPerShareDilutedTTMGrowthExact"
+                  title="EPS-DG"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
               <TableHeaderCell className="text-right" title="Revenue Growth">
-                RG
+                <SortableColumn
+                  id="totalRevenueGrowthTTMExact"
+                  title="RG"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
-              <TableHeaderCell className="text-right" title="Return On Equity">
-                ROE
+              <TableHeaderCell className="text-right" title="Return on Equity">
+                <SortableColumn
+                  id="returnOnEquityExact"
+                  title="ROE"
+                  onSortItems={onSortItems}
+                />
               </TableHeaderCell>
             </>
           )}
@@ -281,6 +316,73 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
+          {showCurrentWeekMonthRange && (
+            <>
+              <TableHeaderCell
+                className="text-left"
+                title="Up From Current Week Low"
+              >
+                <SortableColumn
+                  start
+                  id="upFromCurrentWeekLowExact"
+                  title="UWL"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Down From Current Week High"
+              >
+                <SortableColumn
+                  id="downFromCurrentWeekHighExact"
+                  title="DWH"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-left"
+                title="Up From Current Month Low"
+              >
+                <SortableColumn
+                  start
+                  id="upFromCurrentMonthLowExact"
+                  title="UML"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Down From Current Month High"
+              >
+                <SortableColumn
+                  id="downFromCurrentMonthHighExact"
+                  title="DMH"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-left"
+                title="Up From Three Month Low"
+              >
+                <SortableColumn
+                  start
+                  id="upFromThreeMonthLowExact"
+                  title="U3ML"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell
+                className="text-right"
+                title="Down From Three Month High"
+              >
+                <SortableColumn
+                  id="downFromThreeMonthHighExact"
+                  title="D3MH"
+                  onSortItems={onSortItems}
+                />
+              </TableHeaderCell>
+            </>
+          )}
           <TableHeaderCell className="text-left">
             <SortableColumn
               start
@@ -433,6 +535,19 @@ function StockDataTable({
                   </BadgeColorWithThreshold>
                 </TableCell>
                 <TableCell className="text-right">
+                  <BadgeColorWithThreshold
+                    value={item.currentRatioExact}
+                    positiveThreshold={2}
+                    neutralThreshold={0}
+                    compareFn={TCompareFn.GTE}
+                  >
+                    {item.currentRatio}
+                  </BadgeColorWithThreshold>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge color="gray">{item.debtToEquityRatio}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
                   <Badge>
                     {item.earningPerShareDilutedTTM}{" "}
                     {item.earningPerShareDilutedTTMPer
@@ -531,6 +646,40 @@ function StockDataTable({
                 {item.downFromDayHigh}%
               </BadgeDelta>
             </TableCell>
+            {showCurrentWeekMonthRange && (
+              <>
+                <TableCell className="text-left">
+                  <BadgeDelta deltaType="increase">
+                    {item.upFromCurrentWeekLow}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta deltaType="decrease">
+                    {item.downFromCurrentWeekHigh}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-left">
+                  <BadgeDelta deltaType="increase">
+                    {item.upFromCurrentMonthLow}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta deltaType="decrease">
+                    {item.downFromCurrentMonthHigh}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-left">
+                  <BadgeDelta deltaType="increase">
+                    {item.upFromThreeMonthLow}%
+                  </BadgeDelta>
+                </TableCell>
+                <TableCell className="text-right">
+                  <BadgeDelta deltaType="decrease">
+                    {item.downFromThreeMonthHigh}%
+                  </BadgeDelta>
+                </TableCell>
+              </>
+            )}
             <TableCell className="text-left">
               <BadgeDelta deltaType="increase" className="mr-2">
                 {item.upFromSixMonthLow}%
@@ -658,6 +807,8 @@ function StockDataTable({
           {showFundamentals && (
             <>
               <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
               <TableFooterCell className="text-right"></TableFooterCell>
               <TableFooterCell className="text-right"></TableFooterCell>
               <TableFooterCell className="text-right"></TableFooterCell>
@@ -707,6 +858,16 @@ function StockDataTable({
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
+          {showCurrentWeekMonthRange && (
+            <>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-left"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+              <TableFooterCell className="text-right"></TableFooterCell>
+            </>
+          )}
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
