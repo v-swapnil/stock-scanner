@@ -8,6 +8,9 @@ interface IStockRangeBarProps {
   low: number;
   high: number;
   current: number;
+  lowParsed?: string;
+  highParsed?: string;
+  currentValueInPercent?: number;
   fixedWidth?: boolean;
 }
 
@@ -15,16 +18,20 @@ function StockRangeBar({
   low,
   high,
   current,
+  lowParsed,
+  highParsed,
+  currentValueInPercent,
   fixedWidth,
 }: IStockRangeBarProps) {
-  const lowParsed = toFixedNumber(low);
-  const highParsed = toFixedNumber(high);
-  const markerValue = ((current - low) / (high - low)) * 100;
+  const markerValue =
+    typeof currentValueInPercent !== "undefined"
+      ? currentValueInPercent
+      : ((current - low) / (high - low)) * 100;
   return (
     <>
       <Flex className={fixedWidth ? "w-[200px]" : "w-full"}>
-        <Text>{lowParsed}</Text>
-        <Text>{highParsed}</Text>
+        <Text>{lowParsed || toFixedNumber(low)}</Text>
+        <Text>{highParsed || toFixedNumber(high)}</Text>
       </Flex>
       <MarkerBar value={markerValue} color="slate" className="mt-2 bg-range" />
     </>

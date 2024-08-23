@@ -1,15 +1,7 @@
-import { JSONFilePreset } from "lowdb/node";
-
-type DbSchemaType = {
-  favorite_stocks: Array<string>;
-};
+import { getDBInstance } from "@/database/helpers";
 
 export async function GET() {
-  const defaultData = { favorite_stocks: [] };
-  const db = await JSONFilePreset<DbSchemaType>(
-    "src/database/db.json",
-    defaultData
-  );
+  const db = await getDBInstance();
   const favoriteStocks = db.data.favorite_stocks;
 
   return Response.json(favoriteStocks);
@@ -18,11 +10,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const { stockId }: { stockId: string } = await request.json();
 
-  const defaultData = { favorite_stocks: [] };
-  const db = await JSONFilePreset<DbSchemaType>(
-    "src/database/db.json",
-    defaultData
-  );
+  const db = await getDBInstance();
 
   const dataIndex = db.data.favorite_stocks.indexOf(stockId);
   if (dataIndex !== -1) {

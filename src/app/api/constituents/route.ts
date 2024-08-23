@@ -21,8 +21,11 @@ async function getIndexConstituents(indexDataUrl: string) {
   return responseJson.map((item) => item.symbol);
 }
 
-async function handler() {
-  const indexKeys = Object.keys(indexDataUrlMappings);
+async function handler(request: Request) {
+  const searchParams = new URL(request.url).searchParams;
+  const indexKeys = searchParams.get("include-indices")
+    ? Object.keys(indexDataUrlMappings)
+    : [];
   const promises = indexKeys.map((key) => {
     return getIndexConstituents(indexDataUrlMappings[key]);
   });
@@ -42,9 +45,9 @@ async function handler() {
   return result;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const result = await handler();
+    const result = await handler(request);
     return Response.json(result);
   } catch (err) {
     return Response.json({});

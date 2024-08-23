@@ -168,6 +168,8 @@ export type TStockDataItem = {
   highlightRed: boolean;
   highlight: boolean;
   volumeIncreasedBy: number;
+  volumeDecreasedBy: number;
+  volumeChangedBy: number;
   highlights: Array<THighlights>;
   dayChangeDeltaType: string;
   preMarketChangeDeltaType: string;
@@ -187,6 +189,14 @@ export type TStockDataItem = {
   debtToEquityRatio: string;
   upFromDayLow: string;
   downFromDayHigh: string;
+  priceToFreeCashFlowExact: number;
+  priceToFreeCashFlow: string;
+  enterpriseValueToEBITDAExact: number;
+  enterpriseValueToEBITDA: string;
+  indexes: Array<{ name: string }>;
+  lowParsed: string;
+  highParsed: string;
+  currentDayRangeValueInPercent: number;
   // optional
   isStarred?: boolean;
   isFnO?: boolean;

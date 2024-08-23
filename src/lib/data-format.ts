@@ -23,6 +23,7 @@ import {
 function getColumnAlias(columnId: string) {
   const columns: Record<string, string> = {
     // Basic Details
+    "indexes.tr": "indexes",
     logoId: "logoId",
     name: "name",
     description: "description",
@@ -108,6 +109,9 @@ function getColumnAlias(columnId: string) {
     float_shares_percent_current: "freeFloatSharesPerExact",
     current_ratio_fq: "currentRatioExact",
     debt_to_equity_fq: "debtToEquityRatioExact",
+    return_on_invested_capital_fq: "returnOnInvestedCapitalExact",
+    price_free_cash_flow_ttm: "priceToFreeCashFlowExact",
+    enterprise_value_ebitda_ttm: "enterpriseValueToEBITDAExact",
   };
   return columns[columnId] || columnId;
 }
@@ -122,6 +126,7 @@ function getDataWithColumnIds(columns: string[], dataItems: any[]) {
 
 function getStockDataItemColumns() {
   return [
+    "indexes.tr",
     "logoid",
     "name",
     "description",
@@ -194,6 +199,9 @@ function getStockDataItemColumns() {
     "current_ratio_fq",
     "debt_to_equity_fq",
     "non_gaap_price_to_earnings_per_share_forecast_next_fy",
+    "return_on_invested_capital_fq",
+    "price_free_cash_flow_ttm",
+    "enterprise_value_ebitda_ttm",
   ];
 }
 
@@ -232,6 +240,9 @@ export function getFormattedDataItems(dataItems: Array<any>) {
     .map((item) => getDataWithColumnIds(dataItemColumns, item.d))
     .map((item) => ({
       ...item,
+      indexes: item.indexes || [],
+      lowParsed: toFixedNumber(item.low),
+      highParsed: toFixedNumber(item.high),
       volume: numberToText(item.volume),
       volumeExact: item.volume,
       volumeDelta: item.tenDayAverageVolumeExact - item.volume,
@@ -331,6 +342,8 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       freeFloatSharesPer: toFixedNumber(item.freeFloatSharesPerExact),
       currentRatio: toFixedNumber(item.currentRatioExact),
       debtToEquityRatio: toFixedNumber(item.debtToEquityRatioExact),
+      priceToFreeCashFlow: toFixedNumber(item.priceToFreeCashFlowExact),
+      enterpriseValueToEBITDA: toFixedNumber(item.enterpriseValueToEBITDAExact),
     }));
   return formattedDataItems;
 }
@@ -354,6 +367,8 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     highlightRed: false,
     highlight: false,
     volumeIncreasedBy: 0,
+    volumeDecreasedBy: 0,
+    volumeChangedBy: 0,
     preMarketChangeType: getChangePercentageGroup(stockDetails.preMarketChange),
     dayChangeType: getChangePercentageGroup(stockDetails.dayChange),
     weekChangeType: getChangePercentageGroup(stockDetails.weekChange),
@@ -385,6 +400,7 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     upFromThreeMonthLowExact: 0,
     downFromThreeMonthHigh: "",
     downFromThreeMonthHighExact: 0,
+    currentDayRangeValueInPercent: 0,
   };
   const currentPrice = stockDetails.currentPriceExact;
   if (stockDetails.low && stockDetails.high) {
@@ -463,8 +479,21 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     const delta = (volume - tenDayAverageVolume) / tenDayAverageVolume;
     if (delta > 0.25) {
       metrics.volumeIncreasedBy = toFixedIntegerNumber(delta * 100);
+      metrics.volumeChangedBy = metrics.volumeIncreasedBy;
+    }
+  } else if (volume < tenDayAverageVolume) {
+    const delta = (tenDayAverageVolume - volume) / tenDayAverageVolume;
+    if (delta > 0.25) {
+      metrics.volumeDecreasedBy = toFixedIntegerNumber(delta * 100);
+      metrics.volumeChangedBy = -metrics.volumeDecreasedBy;
     }
   }
+
+  metrics.currentDayRangeValueInPercent =
+    ((stockDetails.currentPriceExact - stockDetails.low) /
+      (stockDetails.high - stockDetails.low)) *
+    100;
+
   return {
     ...stockDetails,
     ...metrics,
@@ -776,4 +805,19 @@ export function getPayloadForOptionsRequest(symbol: string) {
     ignore_unknown_fields: false,
     index_filters: [{ name: "underlying_symbol", values: ["NSE:" + symbol] }],
   };
+}
+
+export function getGoodStocks(stockSataItems: TStockDataItems) {
+  return stockSataItems.filter((item) =>
+    Boolean(
+      item.priceEarningTTMExact &&
+        item.priceEarningGrowthExact &&
+        item.priceToFreeCashFlowExact &&
+        item.enterpriseValueToEBITDAExact &&
+        item.priceEarningTTMExact < 24 &&
+        item.priceEarningGrowthExact < 1 &&
+        item.priceToFreeCashFlowExact < 10 &&
+        item.enterpriseValueToEBITDAExact < 10
+    )
+  );
 }

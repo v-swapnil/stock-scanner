@@ -54,6 +54,7 @@ function StockDataTable({
 }: IStockDataTableProps) {
   const insights = useMemo(() => {
     let totalPriceEarningRatio = 0;
+    let totalForwardPriceEarningRatio = 0;
     let totalPreMarketChange = 0;
     let totalDayChange = 0;
     let totalWeekChange = 0;
@@ -63,6 +64,7 @@ function StockDataTable({
 
     filteredWithFavorites.forEach((item) => {
       totalPriceEarningRatio += item.priceEarningTTMExact || 0;
+      totalForwardPriceEarningRatio += item.forwardPriceEarningExact || 0;
       totalPreMarketChange += item.preMarketChangeExact;
       totalDayChange += item.dayChangeExact;
       totalWeekChange += item.weekChangeExact;
@@ -74,6 +76,9 @@ function StockDataTable({
     const averages = {
       avgPriceEarningRatio: toFixedNumber(
         totalPriceEarningRatio / filteredWithFavorites.length
+      ),
+      avgForwardPriceEarningRatio: toFixedNumber(
+        totalForwardPriceEarningRatio / filteredWithFavorites.length
       ),
       avgPreMarketChange: toFixedNumber(
         totalPreMarketChange / filteredWithFavorites.length
@@ -98,6 +103,9 @@ function StockDataTable({
     return {
       ...averages,
       avgPriceEarningRatioExact: parseFloat(averages.avgPriceEarningRatio),
+      avgForwardPriceEarningRatioExact: parseFloat(
+        averages.avgForwardPriceEarningRatio
+      ),
       avgPreMarketChangeDeltaType: getDeltaTypeFromChangePercentage(
         averages.avgPreMarketChange
       ),
@@ -138,15 +146,15 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
+          <TableHeaderCell className="text-right" title="Forward PE">
+            <SortableColumn
+              id="forwardPriceEarningExact"
+              title="F-PE"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
           {showFundamentals && (
             <>
-              <TableHeaderCell className="text-right" title="Forward PE">
-                <SortableColumn
-                  id="forwardPriceEarningExact"
-                  title="F-PE"
-                  onSortItems={onSortItems}
-                />
-              </TableHeaderCell>
               <TableHeaderCell className="text-right" title="PE Diff">
                 <SortableColumn
                   id="priceEarningDiffExact"
@@ -294,13 +302,13 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
-          <TableHeaderCell className="text-right">
+          {/* <TableHeaderCell className="text-right">
             <SortableColumn
               id="preMarketVolumeExact"
               title="Pre-Vol"
               onSortItems={onSortItems}
             />
-          </TableHeaderCell>
+          </TableHeaderCell> */}
           <TableHeaderCell className="text-left" title="Up From Day Low">
             <SortableColumn
               start
@@ -414,7 +422,13 @@ function StockDataTable({
             />
           </TableHeaderCell>
           <TableHeaderCell className="text-left">Avg Volume</TableHeaderCell>
-          <TableHeaderCell className="text-right">Volume</TableHeaderCell>
+          <TableHeaderCell className="text-right">
+            <SortableColumn
+              id="volumeChangedBy"
+              title="Volume"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
           {showMovingAverages && (
             <>
               <TableHeaderCell className="text-left">
@@ -427,7 +441,13 @@ function StockDataTable({
           )}
           <TableHeaderCell>Sector</TableHeaderCell>
           <TableHeaderCell className="text-right">Highlights</TableHeaderCell>
-          <TableHeaderCell className="text-right">Day Range</TableHeaderCell>
+          <TableHeaderCell className="text-right">
+            <SortableColumn
+              id="currentDayRangeValueInPercent"
+              title="Day Range"
+              onSortItems={onSortItems}
+            />
+          </TableHeaderCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -479,20 +499,20 @@ function StockDataTable({
                 {item.priceEarningTTM}
               </BadgeColorWithThreshold>
             </TableCell>
+            <TableCell className="text-right">
+              <Flex justifyContent="end">
+                <BadgeColorWithThreshold
+                  value={item.forwardPriceEarningExact}
+                  positiveThreshold={25}
+                  neutralThreshold={75}
+                  compareFn={TCompareFn.LTE}
+                >
+                  {item.forwardPriceEarning}
+                </BadgeColorWithThreshold>
+              </Flex>
+            </TableCell>
             {showFundamentals && (
               <>
-                <TableCell className="text-right">
-                  <Flex justifyContent="end">
-                    <BadgeColorWithThreshold
-                      value={item.forwardPriceEarningExact}
-                      positiveThreshold={25}
-                      neutralThreshold={75}
-                      compareFn={TCompareFn.LTE}
-                    >
-                      {item.forwardPriceEarning}
-                    </BadgeColorWithThreshold>
-                  </Flex>
-                </TableCell>
                 <TableCell className="text-right">
                   <BadgeDelta
                     deltaType={
@@ -635,9 +655,9 @@ function StockDataTable({
                 {item.preMarketChange}%
               </BadgeDelta>
             </TableCell>
-            <TableCell className="text-right">
+            {/* <TableCell className="text-right">
               <Badge color="gray">{item.preMarketVolume}</Badge>
-            </TableCell>
+            </TableCell> */}
             <TableCell className="text-left">
               <BadgeDelta deltaType="increase">{item.upFromDayLow}%</BadgeDelta>
             </TableCell>
@@ -717,6 +737,10 @@ function StockDataTable({
                 <BadgeDelta deltaType="increase">
                   {item.volume} ({item.volumeIncreasedBy}%)
                 </BadgeDelta>
+              ) : item.volumeDecreasedBy ? (
+                <BadgeDelta deltaType="decrease">
+                  {item.volume} ({item.volumeDecreasedBy}%)
+                </BadgeDelta>
               ) : (
                 <Badge color="gray">{item.volume}</Badge>
               )}
@@ -785,6 +809,9 @@ function StockDataTable({
                 low={item.low}
                 high={item.high}
                 current={item.currentPriceExact}
+                lowParsed={item.lowParsed}
+                highParsed={item.highParsed}
+                currentValueInPercent={item.currentDayRangeValueInPercent}
               />
             </TableCell>
           </TableRow>
@@ -804,9 +831,18 @@ function StockDataTable({
               {insights.avgPriceEarningRatio}
             </BadgeColorWithThreshold>
           </TableFooterCell>
+          <TableFooterCell className="text-right">
+            <BadgeColorWithThreshold
+              value={insights.avgForwardPriceEarningRatioExact}
+              positiveThreshold={25}
+              neutralThreshold={75}
+              compareFn={TCompareFn.LTE}
+            >
+              {insights.avgForwardPriceEarningRatio}
+            </BadgeColorWithThreshold>
+          </TableFooterCell>
           {showFundamentals && (
             <>
-              <TableFooterCell className="text-left"></TableFooterCell>
               <TableFooterCell className="text-left"></TableFooterCell>
               <TableFooterCell className="text-left"></TableFooterCell>
               <TableFooterCell className="text-right"></TableFooterCell>
@@ -855,7 +891,7 @@ function StockDataTable({
               {insights.avgPreMarketChange}%
             </BadgeDelta>
           </TableFooterCell>
-          <TableFooterCell className="text-left"></TableFooterCell>
+          {/* <TableFooterCell className="text-left"></TableFooterCell> */}
           <TableFooterCell className="text-left"></TableFooterCell>
           <TableFooterCell className="text-left"></TableFooterCell>
           {showCurrentWeekMonthRange && (

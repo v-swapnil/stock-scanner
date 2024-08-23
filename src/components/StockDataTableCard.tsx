@@ -91,18 +91,24 @@ function StockDataTableCard({
     };
     getFavoriteStocks();
 
-    // Index Constituents
-    const getAllConstituents = async () => {
-      const response = await axios.get("/api/constituents");
-      setFnOStocks(response.data.futureAndOptions || []);
-      setNiftyStocks(response.data.nifty || []);
-      setBankNiftyStocks(response.data.niftyBank || []);
-      setFinNiftyStocks(response.data.niftyFinServices || []);
-      setMidCapNiftyStocks(response.data.niftyMidCap || []);
-      setNiftyJuniorStocks(response.data.niftyJunior || []);
-      setPseStocks(response.data.niftyPublicSectorEnterprises || []);
+    const getFnOStock = async () => {
+      const response = await axios.get("/api/stock-groups?group_name=fno");
+      setFnOStocks(response.data || []);
     };
-    getAllConstituents();
+    getFnOStock();
+
+    // Index Constituents
+    // const getAllConstituents = async () => {
+    //   const response = await axios.get("/api/constituents");
+    //   setFnOStocks(response.data.futureAndOptions || []);
+    //   setNiftyStocks(response.data.nifty || []);
+    //   setBankNiftyStocks(response.data.niftyBank || []);
+    //   setFinNiftyStocks(response.data.niftyFinServices || []);
+    //   setMidCapNiftyStocks(response.data.niftyMidCap || []);
+    //   setNiftyJuniorStocks(response.data.niftyJunior || []);
+    //   setPseStocks(response.data.niftyPublicSectorEnterprises || []);
+    // };
+    // getAllConstituents();
 
     // Market News
     // const getMarketNews = async () => {
@@ -241,37 +247,22 @@ function StockDataTableCard({
     getIndexPricingData();
   }, []);
 
-  const filteredWithFavorites = useMemo(() => {
-    return filtered.map((item) => {
-      item.isStarred = favoriteStocks.includes(item.name);
-      item.isFnO = fnoStocks.includes(item.name);
-      item.isIndex = [
-        ...niftyStocks,
-        ...bankNiftyStocks,
-        ...finNiftyStocks,
-        ...midCapNiftyStocks,
-      ].includes(item.name);
-      return item;
-    });
-  }, [
-    filtered,
-    favoriteStocks,
-    fnoStocks,
-    niftyStocks,
-    bankNiftyStocks,
-    finNiftyStocks,
-    midCapNiftyStocks,
-  ]);
+  const { sectors, marketSentiment, indices, indicesMappings } = useMemo(() => {
+    let sectorMappings: Record<string, number> = {};
 
-  const sectors = useMemo(() => {
-    return Array.from(new Set(data.map((item) => item.industry))) || [];
-  }, [data]);
-
-  const marketSentiment = useMemo(() => {
     let positive = 0;
     let negative = 0;
     let noChange = 0;
+
+    let indicesMappings: Record<string, string[]> = {};
+
     data.forEach((item) => {
+      if (sectorMappings[item.industry]) {
+        sectorMappings[item.industry] += 1;
+      } else {
+        sectorMappings[item.industry] = 1;
+      }
+
       if (item.dayChangeExact === 0) {
         noChange++;
       } else if (item.dayChangeExact > 0) {
@@ -279,15 +270,47 @@ function StockDataTableCard({
       } else {
         negative++;
       }
+
+      item.indexes.forEach((elem) => {
+        if (indicesMappings[elem.name]) {
+          indicesMappings[elem.name].push(item.name);
+        } else {
+          indicesMappings[elem.name] = [item.name];
+        }
+      });
     });
-    const positivePer = positive / data.length;
-    const negativePer = negative / data.length;
-    return positivePer > 0.6
-      ? "Positive"
-      : negativePer > 0.6
-      ? "Negative"
-      : "Neutral";
+
+    const sectors = Object.keys(sectorMappings)
+      .sort((a, b) => sectorMappings[b] - sectorMappings[a])
+      .map((item) => `[${sectorMappings[item]}] ${item}`);
+
+    const marketSentiment =
+      positive / data.length > 0.6
+        ? "Positive"
+        : negative / data.length > 0.6
+        ? "Negative"
+        : "Neutral";
+
+    const indices = Object.keys(indicesMappings)
+      .sort((a, b) => indicesMappings[b].length - indicesMappings[a].length)
+      .map((item) => `[${indicesMappings[item].length}] ${item}`);
+
+    return {
+      sectors,
+      marketSentiment,
+      indicesMappings,
+      indices,
+    };
   }, [data]);
+
+  const filteredWithFavorites = useMemo(() => {
+    return filtered.map((item) => {
+      item.isStarred = favoriteStocks.includes(item.name);
+      item.isFnO = fnoStocks.includes(item.name);
+      item.isIndex = item.indexes.length > 0;
+      return item;
+    });
+  }, [filtered, favoriteStocks, fnoStocks]);
 
   const marketContributors = useMemo(() => {
     const sorted = data.toSorted((a, b) => b.dayChangeExact - a.dayChangeExact);
@@ -332,26 +355,28 @@ function StockDataTableCard({
 
   const onChangeStockType = useCallback(
     (newStockType: string) => {
+      const stockTypeToCompare = newStockType.replace(/\[\d*\] /, "");
       setSelectedStockType(newStockType);
-      const list =
-        newStockType === "Starred"
-          ? favoriteStocks
-          : newStockType === "PSE"
-          ? pseStocks
-          : newStockType === "Nifty"
-          ? niftyStocks
-          : newStockType === "NiftyJunior"
-          ? niftyJuniorStocks
-          : newStockType === "BankNifty"
-          ? bankNiftyStocks
-          : newStockType === "FinNifty"
-          ? finNiftyStocks
-          : newStockType === "MidCapNifty"
-          ? midCapNiftyStocks
-          : fnoStocks;
-      const cmp = newStockType === "Cash" ? false : true;
+      const list = indicesMappings[stockTypeToCompare]
+        ? indicesMappings[stockTypeToCompare]
+        : stockTypeToCompare === "Starred"
+        ? favoriteStocks
+        : stockTypeToCompare === "PSE"
+        ? pseStocks
+        : stockTypeToCompare === "Nifty"
+        ? niftyStocks
+        : stockTypeToCompare === "NiftyJunior"
+        ? niftyJuniorStocks
+        : stockTypeToCompare === "BankNifty"
+        ? bankNiftyStocks
+        : stockTypeToCompare === "FinNifty"
+        ? finNiftyStocks
+        : stockTypeToCompare === "MidCapNifty"
+        ? midCapNiftyStocks
+        : fnoStocks;
+      const cmp = stockTypeToCompare === "Cash" ? false : true;
       setFiltered(
-        newStockType === "All"
+        stockTypeToCompare === "All"
           ? data
           : data.filter((item) => list.includes(item.name) === cmp)
       );
@@ -365,6 +390,7 @@ function StockDataTableCard({
       finNiftyStocks,
       midCapNiftyStocks,
       fnoStocks,
+      indicesMappings,
       data,
     ]
   );
@@ -418,11 +444,14 @@ function StockDataTableCard({
   const onChangeSector = useCallback(
     (newSector: string, isSector?: boolean) => {
       setSelectedSector(newSector);
+      const sectorToCompare = newSector.replace(/\[\d*\] /, "");
       setFiltered(
         newSector === "All"
           ? data
           : data.filter((item) =>
-              isSector ? item.sector === newSector : item.industry === newSector
+              isSector
+                ? item.sector === sectorToCompare
+                : item.industry === sectorToCompare
             )
       );
     },
@@ -467,6 +496,7 @@ function StockDataTableCard({
   const showFundamentals = selectedViews.includes("Fundamentals");
   const showYearlyChange = selectedViews.includes("YearlyChange");
   const showMovingAverages = selectedViews.includes("MovingAverages");
+  const showCurrentWeekMonthRange = selectedViews.includes("UFLandDFH");
 
   return (
     <>
@@ -542,6 +572,7 @@ function StockDataTableCard({
               <MultiSelectItem value="MovingAverages">
                 Moving Averages
               </MultiSelectItem>
+              <MultiSelectItem value="UFLandDFH">UFL and DFH</MultiSelectItem>
             </MultiSelect>
             <Select
               value={selectedChangeType}
@@ -575,7 +606,7 @@ function StockDataTableCard({
               onValueChange={onChangeSector}
               enableClear={false}
             >
-              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="All">[{data.length}] All</SelectItem>
               {sectors.map((item) => (
                 <SelectItem key={item} value={item}>
                   {item}
@@ -587,16 +618,21 @@ function StockDataTableCard({
               onValueChange={onChangeStockType}
               enableClear={false}
             >
-              <SelectItem value="All">All</SelectItem>
-              <SelectItem value="Starred">Starred</SelectItem>
-              <SelectItem value="Cash">Cash</SelectItem>
-              <SelectItem value="PSE">PSE</SelectItem>
-              <SelectItem value="FnO">Future and Options</SelectItem>
-              <SelectItem value="Nifty">Nifty</SelectItem>
-              <SelectItem value="NiftyJunior">Nifty Junior</SelectItem>
-              <SelectItem value="BankNifty">Nifty Bank</SelectItem>
-              <SelectItem value="FinNifty">Nifty Finance</SelectItem>
-              <SelectItem value="MidCapNifty">Nifty MidCap</SelectItem>
+              <SelectItem value="All">[{data.length}] All</SelectItem>
+              <SelectItem value="Starred">
+                [{favoriteStocks.length}] Starred
+              </SelectItem>
+              <SelectItem value="Cash">
+                [{data.length - fnoStocks.length}] Cash
+              </SelectItem>
+              <SelectItem value="FnO">
+                [{fnoStocks.length}] Future and Options
+              </SelectItem>
+              {indices.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
+                </SelectItem>
+              ))}
             </Select>
             <TabGroup index={selectMCapIndex} onIndexChange={onChangeMCapType}>
               <TabList variant="solid">
@@ -632,9 +668,13 @@ function StockDataTableCard({
             Search
           </Button>
         </Flex>
+        {/* <Button onClick={() => setFiltered(getGoodStocks(data))}>
+          Show Good Stocks
+        </Button> */}
         <StockDataTable
           filteredWithFavorites={filteredWithFavorites}
           priceEarningBySector={priceEarningBySector}
+          showCurrentWeekMonthRange={showCurrentWeekMonthRange}
           showFundamentals={showFundamentals}
           showYearlyChange={showYearlyChange}
           showMovingAverages={showMovingAverages}
