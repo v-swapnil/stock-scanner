@@ -439,8 +439,12 @@ function StockDataTable({
               </TableHeaderCell>
             </>
           )}
-          <TableHeaderCell>Sector</TableHeaderCell>
-          <TableHeaderCell className="text-right">Highlights</TableHeaderCell>
+          <TableHeaderCell>
+            <Flex justifyContent="between">
+              <div>Sector</div>
+              <div>Highlights</div>
+            </Flex>
+          </TableHeaderCell>
           <TableHeaderCell className="text-right">
             <SortableColumn
               id="currentDayRangeValueInPercent"
@@ -448,6 +452,7 @@ function StockDataTable({
               onSortItems={onSortItems}
             />
           </TableHeaderCell>
+          <TableHeaderCell className="text-right">Details</TableHeaderCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -785,23 +790,25 @@ function StockDataTable({
               </>
             )}
             <TableCell>
-              <Badge
-                className="cursor-pointer mr-2"
-                color="sky"
-                onClick={() => onChangeSector(item.sector, true)}
-              >
-                {item.sector}
-              </Badge>
-              <Badge
-                className="cursor-pointer"
-                color="sky"
-                onClick={() => onChangeSector(item.industry)}
-              >
-                {item.industry}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-right">
-              <StockHighlights highlights={item.consolidatedHighlights} />
+              <Flex justifyContent="between" className="mr-2">
+                <Flex justifyContent="start">
+                  <Badge
+                    className="cursor-pointer mr-2"
+                    color="sky"
+                    onClick={() => onChangeSector(item.sector, true)}
+                  >
+                    {item.sector}
+                  </Badge>
+                  <Badge
+                    className="cursor-pointer"
+                    color="sky"
+                    onClick={() => onChangeSector(item.industry)}
+                  >
+                    {item.industry}
+                  </Badge>
+                </Flex>
+                <StockHighlights highlights={item.consolidatedHighlights} />
+              </Flex>
             </TableCell>
             <TableCell className="text-right">
               <StockRangeBar
@@ -813,6 +820,14 @@ function StockDataTable({
                 highParsed={item.highParsed}
                 currentValueInPercent={item.currentDayRangeValueInPercent}
               />
+            </TableCell>
+            <TableCell>
+              <Flex justifyContent="end">
+                <Badge className="ml-2 fixed-badge-in-container on-left">
+                  {item.name}
+                </Badge>
+                {item.description}
+              </Flex>
             </TableCell>
           </TableRow>
         ))}

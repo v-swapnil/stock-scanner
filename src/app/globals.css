@@ -49,6 +49,10 @@ table {
   background-color: #030712;
 }
 
+.stock-details-table .fixed-badge-in-container.on-left {
+  right: 0;
+}
+
 /* .stock-details-table tbody tr td:first-child {
   position: sticky;
   left: 0;
