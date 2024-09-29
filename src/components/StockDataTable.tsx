@@ -61,6 +61,8 @@ function StockDataTable({
     let totalMonthChange = 0;
     let totalThreeMonthChange = 0;
     let totalSixMonthChange = 0;
+    let totalUDLChange = 0;
+    let totalDDHChange = 0;
 
     filteredWithFavorites.forEach((item) => {
       totalPriceEarningRatio += item.priceEarningTTMExact || 0;
@@ -71,33 +73,26 @@ function StockDataTable({
       totalMonthChange += item.monthChangeExact;
       totalThreeMonthChange += item.threeMonthChangeExact;
       totalSixMonthChange += item.sixMonthChangeExact;
+      totalUDLChange += item.upFromDayLowExact;
+      totalDDHChange += item.downFromDayHighExact;
     });
 
+    const numberOfRows = filteredWithFavorites.length;
     const averages = {
       avgPriceEarningRatio: toFixedNumber(
-        totalPriceEarningRatio / filteredWithFavorites.length
+        totalPriceEarningRatio / numberOfRows
       ),
       avgForwardPriceEarningRatio: toFixedNumber(
-        totalForwardPriceEarningRatio / filteredWithFavorites.length
+        totalForwardPriceEarningRatio / numberOfRows
       ),
-      avgPreMarketChange: toFixedNumber(
-        totalPreMarketChange / filteredWithFavorites.length
-      ),
-      avgDayChange: toFixedNumber(
-        totalDayChange / filteredWithFavorites.length
-      ),
-      avgWeekChange: toFixedNumber(
-        totalWeekChange / filteredWithFavorites.length
-      ),
-      avgMonthChange: toFixedNumber(
-        totalMonthChange / filteredWithFavorites.length
-      ),
-      avgThreeMonthChange: toFixedNumber(
-        totalThreeMonthChange / filteredWithFavorites.length
-      ),
-      avgSixMonthChange: toFixedNumber(
-        totalSixMonthChange / filteredWithFavorites.length
-      ),
+      avgPreMarketChange: toFixedNumber(totalPreMarketChange / numberOfRows),
+      avgDayChange: toFixedNumber(totalDayChange / numberOfRows),
+      avgWeekChange: toFixedNumber(totalWeekChange / numberOfRows),
+      avgMonthChange: toFixedNumber(totalMonthChange / numberOfRows),
+      avgThreeMonthChange: toFixedNumber(totalThreeMonthChange / numberOfRows),
+      avgSixMonthChange: toFixedNumber(totalSixMonthChange / numberOfRows),
+      avgUDLChange: toFixedNumber(totalUDLChange / numberOfRows),
+      avgDDHChange: toFixedNumber(-totalDDHChange / numberOfRows),
     };
 
     return {
@@ -123,6 +118,12 @@ function StockDataTable({
       ),
       avgSixMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
         averages.avgSixMonthChange
+      ),
+      avgUDLChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgUDLChange
+      ),
+      avgDDHChangeDeltaType: getDeltaTypeFromChangePercentage(
+        averages.avgDDHChange
       ),
     };
   }, [filteredWithFavorites]);
@@ -891,7 +892,7 @@ function StockDataTable({
             </BadgeDelta>
           </TableFooterCell>
           <TableFooterCell className="text-right">
-            <BadgeDelta deltaType={insights.avgThreeMonthChangeDeltaType}>
+            <BadgeDelta deltaType={insights.avgSixMonthChangeDeltaType}>
               {insights.avgSixMonthChange}%
             </BadgeDelta>
           </TableFooterCell>
@@ -907,8 +908,16 @@ function StockDataTable({
             </BadgeDelta>
           </TableFooterCell>
           {/* <TableFooterCell className="text-left"></TableFooterCell> */}
-          <TableFooterCell className="text-left"></TableFooterCell>
-          <TableFooterCell className="text-left"></TableFooterCell>
+          <TableFooterCell className="text-left">
+            <BadgeDelta deltaType={insights.avgUDLChangeDeltaType}>
+              {insights.avgUDLChange}%
+            </BadgeDelta>
+          </TableFooterCell>
+          <TableFooterCell className="text-left">
+            <BadgeDelta deltaType={insights.avgDDHChangeDeltaType}>
+              {insights.avgDDHChange}%
+            </BadgeDelta>
+          </TableFooterCell>
           {showCurrentWeekMonthRange && (
             <>
               <TableFooterCell className="text-left"></TableFooterCell>

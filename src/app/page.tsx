@@ -1,3 +1,5 @@
+"use client";
+
 import { Text } from "@tremor/react";
 import Link from "next/link";
 

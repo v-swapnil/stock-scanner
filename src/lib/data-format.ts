@@ -312,9 +312,7 @@ export function getFormattedDataItems(dataItems: Array<any>) {
         1
       ),
       priceEarningTTM: toFixedNumber(item.priceEarningTTMExact),
-      forwardPriceEarning: item.priceEarningTTMExact
-        ? toFixedNumber(item.forwardPriceEarningExact)
-        : "",
+      forwardPriceEarning: toFixedNumber(item.forwardPriceEarningExact),
       priceEarningDiff: toFixedNumber(
         item.forwardPriceEarningExact - item.priceEarningTTMExact
       ),
