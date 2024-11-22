@@ -37,6 +37,13 @@ table {
   z-index: 9;
 }
 
+.stock-details-table tfoot th {
+  position: sticky;
+  bottom: 0;
+  background-color: #131a2b;
+  z-index: 9;
+}
+
 .stock-details-table .fixed-badge {
   position: absolute;
   left: 40px;

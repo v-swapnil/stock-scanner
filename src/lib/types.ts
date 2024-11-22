@@ -120,7 +120,7 @@ export type TStockDataItem = {
   twoHundredDaySMA: number;
   twoHundredDaySMADiff: number;
   priceEarningTTM: string;
-  priceEarningTTMExact: number;
+  priceToEarningsExact: number;
   priceBookTTM: string;
   priceBookTTMExact: number;
   earningPerShareTTM: string;
@@ -132,9 +132,11 @@ export type TStockDataItem = {
   priceEarningGrowth: string;
   priceEarningGrowthExact: number;
   forwardPriceEarning: string;
-  forwardPriceEarningExact: number;
+  forwardPriceToEarningsExact: number;
   priceEarningDiff: string;
   priceEarningDiffExact: number;
+  priceToSalesExact: number;
+  priceToSales: string;
   earningPerShareDilutedTTM: string;
   earningPerShareDilutedTTMExact: number;
   earningPerShareDilutedTTMPer: string;
@@ -197,6 +199,8 @@ export type TStockDataItem = {
   lowParsed: string;
   highParsed: string;
   currentDayRangeValueInPercent: number;
+  upFromDayLowExact: number;
+  downFromDayHighExact: number;
   // optional
   isStarred?: boolean;
   isFnO?: boolean;

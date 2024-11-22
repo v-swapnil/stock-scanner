@@ -5,14 +5,17 @@ import { Flex } from "@tremor/react";
 import classNames from "classnames";
 import { useState, useCallback, memo } from "react";
 
-function SortableColumn({ id, title, start, onSortItems }: any) {
+function SortableColumn({ id, downId, title, start, onSortItems }: any) {
   const [sortDirection, setSortDirection] = useState("");
 
   const onChangeSort = useCallback(() => {
     const newSortDirection = sortDirection === "asc" ? "desc" : "asc";
     setSortDirection(newSortDirection);
-    onSortItems(id, newSortDirection);
-  }, [id, sortDirection, onSortItems]);
+    onSortItems(
+      downId && newSortDirection === "desc" ? downId : id,
+      newSortDirection
+    );
+  }, [id, downId, sortDirection, onSortItems]);
 
   return (
     <Flex

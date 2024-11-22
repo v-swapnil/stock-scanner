@@ -107,14 +107,14 @@ const StockDataTableNew = ({
         sortingFn: "basic",
       },
       {
-        accessorKey: "priceEarningTTMExact",
+        accessorKey: "priceToEarningsExact",
         header: "PE",
         cell: ({ row }) => (
           <Badge
             color={
-              row.original.priceEarningTTMExact <= 25
+              row.original.priceToEarningsExact <= 25
                 ? "emerald"
-                : row.original.priceEarningTTMExact <= 75
+                : row.original.priceToEarningsExact <= 75
                 ? "orange"
                 : "rose"
             }

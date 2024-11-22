@@ -14,6 +14,9 @@ import {
   Switch,
   Flex,
   Callout,
+  TabList,
+  TabGroup,
+  Tab,
 } from "@tremor/react";
 import axios from "axios";
 import { numberFormat } from "@/lib/number-format";
@@ -26,6 +29,7 @@ import {
 function FnOParticipantPositionStats() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [toggle, setToggle] = useState(false);
+  const [selectedView, setSelectedView] = useState(1);
   const [dataItems, setDataItems] = useState<
     Array<TFnOParticipantsOpenInterest>
   >([]);
@@ -100,87 +104,94 @@ function FnOParticipantPositionStats() {
           There was an error in api call - {errorMessage}
         </Callout>
       )}
-      <Flex>
+      <Flex justifyContent="between">
         <DatePicker
           className="w-[278px]"
           value={selectedDate}
           onValueChange={(newDate) => setSelectedDate(newDate)}
           maxDate={new Date()}
         />
-        <Switch
-          id="switch"
-          name="switch"
-          checked={toggle}
-          onChange={setToggle}
-        />
+        <TabGroup
+          className="w-auto"
+          index={selectedView}
+          onIndexChange={setSelectedView}
+        >
+          <TabList variant="solid">
+            <Tab>All</Tab>
+            <Tab>Participant Positions</Tab>
+            <Tab>FII Derivative</Tab>
+          </TabList>
+        </TabGroup>
       </Flex>
-      <Table className="w-full mt-4">
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell>Type</TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Future Long
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Future Short
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Option Call Long
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Option Put Long
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Option Call Short
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Option Put Short
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Total Long Contracts
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              Total Short Contracts
-            </TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {dataItems.length === 0 && (
+      {(selectedView === 0 || selectedView === 1) && (
+        <Table className="w-full mt-4">
+          <TableHead>
             <TableRow>
-              <TableCell className="text-center" colSpan={9}>
-                No data to show
-              </TableCell>
+              <TableHeaderCell>Type</TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Future Long
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Future Short
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Option Call Long
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Option Put Long
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Option Call Short
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Option Put Short
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Total Long Contracts
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                Total Short Contracts
+              </TableHeaderCell>
             </TableRow>
-          )}
-          {dataItems.map((item, index) => (
-            <TableRow key={"item-" + index}>
-              <TableCell>{item.clientType}</TableCell>
-              <TableCell className="text-right">
-                {item.futureIndexLong}
-              </TableCell>
-              <TableCell className="text-right">
-                {item.futureIndexShort}
-              </TableCell>
-              <TableCell className="text-right">
-                {item.optionIndexCallLong}
-              </TableCell>
-              <TableCell className="text-right">
-                {item.optionIndexPutLong}
-              </TableCell>
-              <TableCell className="text-right">
-                {item.optionIndexCallShort}
-              </TableCell>
-              <TableCell className="text-right">
-                {item.optionIndexPutShort}
-              </TableCell>
-              <TableCell className="text-right">{item.totalLong}</TableCell>
-              <TableCell className="text-right">{item.totalShort}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {toggle && <Divider />}
-      {toggle && (
+          </TableHead>
+          <TableBody>
+            {dataItems.length === 0 && (
+              <TableRow>
+                <TableCell className="text-center" colSpan={9}>
+                  No data to show
+                </TableCell>
+              </TableRow>
+            )}
+            {dataItems.map((item, index) => (
+              <TableRow key={"item-" + index}>
+                <TableCell>{item.clientType}</TableCell>
+                <TableCell className="text-right">
+                  {item.futureIndexLong}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.futureIndexShort}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.optionIndexCallLong}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.optionIndexPutLong}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.optionIndexCallShort}
+                </TableCell>
+                <TableCell className="text-right">
+                  {item.optionIndexPutShort}
+                </TableCell>
+                <TableCell className="text-right">{item.totalLong}</TableCell>
+                <TableCell className="text-right">{item.totalShort}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      {selectedView === 0 && <Divider />}
+      {(selectedView === 0 || selectedView === 2) && (
         <Table className="w-full mt-4">
           <TableHead>
             <TableRow>

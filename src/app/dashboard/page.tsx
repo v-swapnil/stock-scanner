@@ -25,7 +25,7 @@ async function getStockData(searchParams: TPageSearchParams) {
     ? parseInt(searchParams.market_cap_in_billions) || 75
     : 75;
   const dataUrl = "https://scanner.tradingview.com/india/scan";
-  const dataPayload = getPayloadForRequest(marketCapInBillions);
+  const dataPayload = getPayloadForRequest({ marketCapInBillions });
   try {
     const response = await axios.post(dataUrl, dataPayload);
     const dataItems = response.data.data;

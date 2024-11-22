@@ -94,24 +94,31 @@ function getColumnAlias(columnId: string) {
     SMA200: "twoHundredDaySMAExact",
 
     // Fundamentals
-    price_earnings_ttm: "priceEarningTTMExact",
+    price_earnings_ttm: "priceToEarningsExact",
     non_gaap_price_to_earnings_per_share_forecast_next_fy:
-      "forwardPriceEarningExact",
+      "forwardPriceToEarningsExact",
     price_book_ratio: "priceBookTTMExact",
-    price_earnings_growth_ttm: "priceEarningGrowthExact",
     dividend_yield_recent: "dividendYieldExact",
     earnings_per_share_basic_ttm: "earningPerShareTTMExact",
     earnings_per_share_diluted_ttm: "earningPerShareDilutedTTMExact",
-    earnings_per_share_diluted_yoy_growth_ttm:
-      "earningPerShareDilutedTTMGrowthExact",
-    total_revenue_yoy_growth_ttm: "totalRevenueGrowthTTMExact",
     return_on_equity: "returnOnEquityExact",
     float_shares_percent_current: "freeFloatSharesPerExact",
     current_ratio_fq: "currentRatioExact",
     debt_to_equity_fq: "debtToEquityRatioExact",
     return_on_invested_capital_fq: "returnOnInvestedCapitalExact",
     price_free_cash_flow_ttm: "priceToFreeCashFlowExact",
-    enterprise_value_ebitda_ttm: "enterpriseValueToEBITDAExact",
+    enterprise_value_ebitda_ttm: "enterpriseValueToEBITDAExact", // EV / EBITDA
+    price_sales_current: "priceToSalesExact", // Price per Share / Revenue per Share
+    gross_margin_fy: "grossMarginPercentageFYExact",
+    net_margin_fy: "netMarginPercentageFYExact",
+    return_on_equity_fy: "returnOnEquityFYExact",
+    return_on_assets_fy: "returnOnAssetsFYExact",
+    return_on_invested_capital_fy: "returnOnInvestedCapitalFYExact",
+    // Growth
+    price_earnings_growth_ttm: "priceEarningGrowthExact",
+    total_revenue_yoy_growth_ttm: "totalRevenueGrowthTTMExact",
+    earnings_per_share_diluted_yoy_growth_ttm:
+      "earningPerShareDilutedTTMGrowthExact",
   };
   return columns[columnId] || columnId;
 }
@@ -202,10 +209,23 @@ function getStockDataItemColumns() {
     "return_on_invested_capital_fq",
     "price_free_cash_flow_ttm",
     "enterprise_value_ebitda_ttm",
+    // Rations
+    "price_sales_current",
+    "gross_margin_fy",
+    "net_margin_fy",
+    "return_on_equity_fy",
+    "return_on_assets_fy",
+    "return_on_invested_capital_fy",
   ];
 }
 
-export function getPayloadForRequest(marketCapInBillions: number) {
+export function getPayloadForRequest({
+  marketCapInBillions,
+  limit = 1000,
+}: {
+  marketCapInBillions: number;
+  limit?: number;
+}) {
   const oneBillion = 1000000000;
   return {
     filter: [
@@ -230,7 +250,7 @@ export function getPayloadForRequest(marketCapInBillions: number) {
     columns: getStockDataItemColumns(),
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
     price_conversion: { to_symbol: false },
-    range: [0, 1000],
+    range: [0, limit],
   };
 }
 
@@ -311,14 +331,15 @@ export function getFormattedDataItems(dataItems: Array<any>) {
         item.twoHundredDaySMAExact,
         1
       ),
-      priceEarningTTM: toFixedNumber(item.priceEarningTTMExact),
-      forwardPriceEarning: toFixedNumber(item.forwardPriceEarningExact),
+      priceEarningTTM: toFixedNumber(item.priceToEarningsExact),
+      forwardPriceEarning: toFixedNumber(item.forwardPriceToEarningsExact),
       priceEarningDiff: toFixedNumber(
-        item.forwardPriceEarningExact - item.priceEarningTTMExact
+        item.forwardPriceToEarningsExact - item.priceToEarningsExact
       ),
       priceEarningDiffExact:
-        item.forwardPriceEarningExact - item.priceEarningTTMExact,
+        item.forwardPriceToEarningsExact - item.priceToEarningsExact,
       priceBookTTM: toFixedNumber(item.priceBookTTMExact),
+      priceToSales: toFixedNumber(item.priceToSalesExact),
       dividendYield: toFixedNumber(item.dividendYieldExact),
       priceEarningGrowth: toFixedNumber(item.priceEarningGrowthExact),
       earningPerShareDilutedTTM: toFixedNumber(
@@ -564,7 +585,7 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
       }
       priceEarningBySector[item.industry].stocks.push(item.name);
       priceEarningBySector[item.industry].priceEarningRatios.push(
-        item.priceEarningTTMExact
+        item.priceToEarningsExact
       );
     }
   });
@@ -808,11 +829,11 @@ export function getPayloadForOptionsRequest(symbol: string) {
 export function getGoodStocks(stockSataItems: TStockDataItems) {
   return stockSataItems.filter((item) =>
     Boolean(
-      item.priceEarningTTMExact &&
+      item.priceToEarningsExact &&
         item.priceEarningGrowthExact &&
         item.priceToFreeCashFlowExact &&
         item.enterpriseValueToEBITDAExact &&
-        item.priceEarningTTMExact < 24 &&
+        item.priceToEarningsExact < 24 &&
         item.priceEarningGrowthExact < 1 &&
         item.priceToFreeCashFlowExact < 10 &&
         item.enterpriseValueToEBITDAExact < 10

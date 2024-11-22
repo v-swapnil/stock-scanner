@@ -9,8 +9,9 @@ async function handler(searchParams: Record<string, string>) {
   const marketCapInBillions = searchParams.market_cap_in_billions
     ? parseInt(searchParams.market_cap_in_billions) || 75
     : 75;
+  const limit = searchParams.limit ? parseInt(searchParams.limit) : undefined;
   const dataUrl = "https://scanner.tradingview.com/india/scan";
-  const dataPayload = getPayloadForRequest(marketCapInBillions);
+  const dataPayload = getPayloadForRequest({ marketCapInBillions, limit });
   const response = await fetch(dataUrl, {
     cache: "no-store",
     method: "POST",
