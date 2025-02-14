@@ -122,7 +122,7 @@
       "FEDERALBNK",
       "GAIL",
       "GLENMARK",
-      "GMRINFRA",
+      "GMRAIRPORT",
       "GNFC",
       "GODREJCP",
       "GODREJPROP",
@@ -146,7 +146,6 @@
       "ICICIGI",
       "ICICIPRULI",
       "IDEA",
-      "IDFC",
       "IDFCFIRSTB",
       "IEX",
       "IGL",
@@ -201,6 +200,7 @@
       "NATIONALUM",
       "NAUKRI",
       "NAVINFLUOR",
+      "NBCC",
       "NCC",
       "NESTLEIND",
       "NHPC",
@@ -217,6 +217,7 @@
       "PERSISTENT",
       "PETRONET",
       "PFC",
+      "PHOENIXLTD",
       "PIDILITIND",
       "PIIND",
       "PNB",
@@ -238,6 +239,7 @@
       "SHRIRAMFIN",
       "SIEMENS",
       "SJVN",
+      "SOLARINDS",
       "SONACOMS",
       "SRF",
       "SUNPHARMA",
@@ -256,6 +258,7 @@
       "TIINDIA",
       "TITAN",
       "TORNTPHARM",
+      "TORNTPOWER",
       "TRENT",
       "TVSMOTOR",
       "UBL",
@@ -271,6 +274,6 @@
       "ZOMATO",
       "ZYDUSLIFE"
     ],
-    "last_updated": "2024-11-29T10:52:06.145Z"
+    "last_updated": "2025-02-11T04:56:42.740Z"
   }
 }
