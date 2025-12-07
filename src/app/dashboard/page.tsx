@@ -19,6 +19,7 @@ import {
 import { Flex } from "@tremor/react";
 import axios from "axios";
 import { useState, useEffect, useMemo } from "react";
+import { RiLoader5Line } from "@remixicon/react";
 
 async function getStockData(searchParams: TPageSearchParams) {
   const marketCapInBillions = searchParams.market_cap_in_billions
@@ -86,6 +87,14 @@ function Home({ searchParams }: IHomePageProps) {
 
   // const stocksDataItems = await getStockData(searchParams);
   // const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen">
+        <RiLoader5Line color="white" className="animate-spin" size={48} />
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
