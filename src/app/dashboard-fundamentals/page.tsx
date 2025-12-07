@@ -1,6 +1,6 @@
 "use client";
 
-import DataGrid from "@/components/DataGrid";
+import DataGrid from "@/components/shared/DataGrid";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

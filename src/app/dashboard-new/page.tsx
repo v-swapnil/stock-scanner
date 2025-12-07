@@ -1,7 +1,7 @@
 "use client";
 
-import IndexCard from "@/components/IndexCard";
-import InsightCard from "@/components/InsightCard";
+import IndexCard from "@/components/market/IndexCard";
+import InsightCard from "@/components/market/InsightCard";
 import StockDataTableCard from "@/components/StockDataTableCard";
 import {
   getFormattedIndices,

@@ -7,7 +7,7 @@ import {
   Badge,
   Divider,
 } from "@tremor/react";
-import StockRangeBar from "./StockRangeBar";
+import StockRangeBar from "../stock/StockRangeBar";
 import { TIndexDataItem } from "@/lib/types";
 import { memo } from "react";
 

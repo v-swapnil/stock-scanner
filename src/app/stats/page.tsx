@@ -1,4 +1,4 @@
-import FnOParticipantPositionStats from "@/components/FnOParticipantPositionStats";
+import FnOParticipantPositionStats from "@/components/fno/FnOParticipantPositionStats";
 import { Divider } from "@tremor/react";
 
 export default async function Stats() {

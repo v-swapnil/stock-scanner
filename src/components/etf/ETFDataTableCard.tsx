@@ -23,7 +23,7 @@ import {
 } from "@tremor/react";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import SortableColumn from "./SortableColumn";
+import SortableColumn from "../shared/SortableColumn";
 
 const ETFDataTableCard = () => {
   const [dataItems, setDataItems] = useState([]);

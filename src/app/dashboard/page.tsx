@@ -1,8 +1,8 @@
 "use client";
 
-import ETFDataTableCard from "@/components/ETFDataTableCard";
-import InsightCard from "@/components/InsightCard";
-import MarketIndicesAnalysis from "@/components/MarketIndicesAnalysis";
+import ETFDataTableCard from "@/components/etf/ETFDataTableCard";
+import InsightCard from "@/components/market/InsightCard";
+import MarketIndicesAnalysis from "@/components/market/MarketIndicesAnalysis";
 import StockDataTableCard from "@/components/StockDataTableCard";
 import {
   addStockInsights,
