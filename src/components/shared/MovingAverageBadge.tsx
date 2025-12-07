@@ -8,8 +8,8 @@ function MovingAverageBadge({ className, maPrice, maDiffPercentage }: any) {
     maDiffPercentage < 0.5 && maDiffPercentage > -0.5
       ? "unchanged"
       : maDiffPercentage >= 0.5
-      ? "increase"
-      : "decrease";
+        ? "increase"
+        : "decrease";
   return (
     <BadgeDelta className={className} deltaType={deltaType}>
       {maPrice} ({maDiffPercentage}%)

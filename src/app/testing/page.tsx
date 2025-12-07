@@ -378,7 +378,7 @@ const Testing = () => {
   const getData = async (villageId: string) => {
     const response = await axios.get(
       "/api/bhulekh?village_id=" + villageId,
-      {}
+      {},
     );
     return response.data;
   };

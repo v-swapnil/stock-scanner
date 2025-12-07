@@ -299,17 +299,17 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       fiftyDayEMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.fiftyDayEMAExact,
-        1
+        1,
       ),
       hundredDayEMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.hundredDayEMAExact,
-        1
+        1,
       ),
       twoHundredDayEMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.twoHundredDayEMAExact,
-        1
+        1,
       ),
       tenDaySMA: toFixedNumber(item.tenDaySMAExact),
       twentyDaySMA: toFixedNumber(item.twentyDaySMAExact),
@@ -319,22 +319,22 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       fiftyDaySMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.fiftyDaySMAExact,
-        1
+        1,
       ),
       hundredDaySMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.hundredDaySMAExact,
-        1
+        1,
       ),
       twoHundredDaySMADiff: getDiffOfPricesInPercentage(
         item.close,
         item.twoHundredDaySMAExact,
-        1
+        1,
       ),
       priceEarningTTM: toFixedNumber(item.priceToEarningsExact),
       forwardPriceEarning: toFixedNumber(item.forwardPriceToEarningsExact),
       priceEarningDiff: toFixedNumber(
-        item.forwardPriceToEarningsExact - item.priceToEarningsExact
+        item.forwardPriceToEarningsExact - item.priceToEarningsExact,
       ),
       priceEarningDiffExact:
         item.forwardPriceToEarningsExact - item.priceToEarningsExact,
@@ -343,18 +343,18 @@ export function getFormattedDataItems(dataItems: Array<any>) {
       dividendYield: toFixedNumber(item.dividendYieldExact),
       priceEarningGrowth: toFixedNumber(item.priceEarningGrowthExact),
       earningPerShareDilutedTTM: toFixedNumber(
-        item.earningPerShareDilutedTTMExact
+        item.earningPerShareDilutedTTMExact,
       ),
       earningPerShareDilutedTTMPerExact: item.earningPerShareDilutedTTMExact
         ? item.earningPerShareDilutedTTMExact / item.close
         : 0,
       earningPerShareDilutedTTMPer: item.earningPerShareDilutedTTMExact
         ? toFixedNumber(
-            (item.earningPerShareDilutedTTMExact / item.close) * 100
+            (item.earningPerShareDilutedTTMExact / item.close) * 100,
           )
         : "",
       earningPerShareDilutedTTMGrowth: toFixedNumber(
-        item.earningPerShareDilutedTTMGrowthExact
+        item.earningPerShareDilutedTTMGrowthExact,
       ),
       totalRevenueGrowthTTM: toFixedNumber(item.totalRevenueGrowthTTMExact),
       returnOnEquity: toFixedNumber(item.returnOnEquityExact),
@@ -373,8 +373,8 @@ export function addStockInsights(stockDetails: TStockDataItem) {
       stockDetails.marketCapInBillions > 1000
         ? "Large"
         : stockDetails.marketCapInBillions > 500
-        ? "Mid"
-        : "Small",
+          ? "Mid"
+          : "Small",
     upFromSixMonthLow: "0",
     upFromSixMonthLowExact: 0,
     downFromSixMonthHigh: "0",
@@ -393,14 +393,14 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     weekChangeType: getChangePercentageGroup(stockDetails.weekChange),
     monthChangeType: getChangePercentageGroup(stockDetails.monthChange),
     currentWeekChangeType: getChangePercentageGroup(
-      stockDetails.currentWeekChange
+      stockDetails.currentWeekChange,
     ),
     threeMonthChangeType: getChangePercentageGroup(
-      stockDetails.threeMonthChange
+      stockDetails.threeMonthChange,
     ),
     sixMonthChangeType: getChangePercentageGroup(stockDetails.sixMonthChange),
     currentMonthChangeType: getChangePercentageGroup(
-      stockDetails.currentMonthChange
+      stockDetails.currentMonthChange,
     ),
     highlights: getStockHighlights(stockDetails),
     upFromDayLow: "",
@@ -461,7 +461,7 @@ export function addStockInsights(stockDetails: TStockDataItem) {
   const { upFromLow, downFromHigh } = getStockRangeDetails(
     currentPrice,
     stockDetails.currentWeekLowExact,
-    stockDetails.currentWeekHighExact
+    stockDetails.currentWeekHighExact,
   );
   metrics.upFromCurrentWeekLow = toFixedNumber(upFromLow);
   metrics.upFromCurrentWeekLowExact = upFromLow;
@@ -473,7 +473,7 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     getStockRangeDetails(
       currentPrice,
       stockDetails.currentMonthLowExact,
-      stockDetails.currentMonthHighExact
+      stockDetails.currentMonthHighExact,
     );
   metrics.upFromCurrentMonthLow = toFixedNumber(upFromMLow);
   metrics.upFromCurrentMonthLowExact = upFromMLow;
@@ -485,7 +485,7 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     getStockRangeDetails(
       currentPrice,
       stockDetails.threeMonthLowExact,
-      stockDetails.threeMonthHighExact
+      stockDetails.threeMonthHighExact,
     );
   metrics.upFromThreeMonthLow = toFixedNumber(upFrom3MLow);
   metrics.upFromThreeMonthLowExact = upFrom3MLow;
@@ -518,23 +518,23 @@ export function addStockInsights(stockDetails: TStockDataItem) {
     ...metrics,
     dayChangeDeltaType: getChangeGroupTypeToDeltaType(metrics.dayChangeType),
     preMarketChangeDeltaType: getChangeGroupTypeToDeltaType(
-      metrics.preMarketChangeType
+      metrics.preMarketChangeType,
     ),
     weekChangeDeltaType: getChangeGroupTypeToDeltaType(metrics.weekChangeType),
     monthChangeDeltaType: getChangeGroupTypeToDeltaType(
-      metrics.monthChangeType
+      metrics.monthChangeType,
     ),
     threeMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-      stockDetails.threeMonthChange
+      stockDetails.threeMonthChange,
     ),
     sixMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-      stockDetails.sixMonthChange
+      stockDetails.sixMonthChange,
     ),
     yearChangeDeltaType: getDeltaTypeFromChangePercentage(
-      stockDetails.yearChange
+      stockDetails.yearChange,
     ),
     fiveYearChangeDeltaType: getDeltaTypeFromChangePercentage(
-      stockDetails.fiveYearChange
+      stockDetails.fiveYearChange,
     ),
     consolidatedHighlights: getConsolidatedHighlights(metrics.highlights),
     searchTerms: getSearchTerms(stockDetails),
@@ -585,7 +585,7 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
       }
       priceEarningBySector[item.industry].stocks.push(item.name);
       priceEarningBySector[item.industry].priceEarningRatios.push(
-        item.priceToEarningsExact
+        item.priceToEarningsExact,
       );
     }
   });
@@ -603,7 +603,7 @@ export function getMetricsFromStockData(stocksDataItems: TStockDataItems) {
   sectors.forEach((key) => {
     priceEarningBySector[key].average = toFixedNumber(
       priceEarningBySector[key].priceEarningRatios.reduce((a, v) => a + v, 0) /
-        priceEarningBySector[key].priceEarningRatios.length
+        priceEarningBySector[key].priceEarningRatios.length,
     );
   });
 
@@ -712,15 +712,15 @@ export function getFormattedETFDataItems(dataItems: Array<any>) {
       dayChangeDeltaType: getDeltaTypeFromChangePercentage(item.dayChangeExact),
       weekChange: toFixedNumber(item.weekChangeExact),
       weekChangeDeltaType: getDeltaTypeFromChangePercentage(
-        item.weekChangeExact
+        item.weekChangeExact,
       ),
       monthChange: toFixedNumber(item.monthChangeExact),
       monthChangeDeltaType: getDeltaTypeFromChangePercentage(
-        item.monthChangeExact
+        item.monthChangeExact,
       ),
       threeMonthChange: toFixedNumber(item.threeMonthChangeExact),
       threeMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-        item.threeMonthChangeExact
+        item.threeMonthChangeExact,
       ),
       assetsUnderManagementExact: item.aum,
       assetsUnderManagement: numberToText(item.aum),
@@ -792,11 +792,11 @@ export function getFormattedIndices(indexDataItems: Array<any>) {
       ...item,
       deltaType: getIndexChangeDeltaType(item.percentageChange),
       pointChange: parseFloat(
-        (item.lastExact - item.previousCloseExact).toFixed(2)
+        (item.lastExact - item.previousCloseExact).toFixed(2),
       ),
       pointUpFromLow: parseFloat((item.lastExact - item.lowExact).toFixed(2)),
       pointDownFromHigh: parseFloat(
-        (item.highExact - item.lastExact).toFixed(2)
+        (item.highExact - item.lastExact).toFixed(2),
       ),
     }));
   return formattedIndices as TIndexDataItems;
@@ -830,13 +830,13 @@ export function getGoodStocks(stockSataItems: TStockDataItems) {
   return stockSataItems.filter((item) =>
     Boolean(
       item.priceToEarningsExact &&
-        item.priceEarningGrowthExact &&
-        item.priceToFreeCashFlowExact &&
-        item.enterpriseValueToEBITDAExact &&
-        item.priceToEarningsExact < 24 &&
-        item.priceEarningGrowthExact < 1 &&
-        item.priceToFreeCashFlowExact < 10 &&
-        item.enterpriseValueToEBITDAExact < 10
-    )
+      item.priceEarningGrowthExact &&
+      item.priceToFreeCashFlowExact &&
+      item.enterpriseValueToEBITDAExact &&
+      item.priceToEarningsExact < 24 &&
+      item.priceEarningGrowthExact < 1 &&
+      item.priceToFreeCashFlowExact < 10 &&
+      item.enterpriseValueToEBITDAExact < 10,
+    ),
   );
 }

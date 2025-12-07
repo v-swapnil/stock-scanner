@@ -13,7 +13,7 @@ function SortableColumn({ id, downId, title, start, onSortItems }: any) {
     setSortDirection(newSortDirection);
     onSortItems(
       downId && newSortDirection === "desc" ? downId : id,
-      newSortDirection
+      newSortDirection,
     );
   }, [id, downId, sortDirection, onSortItems]);
 
@@ -28,14 +28,14 @@ function SortableColumn({ id, downId, title, start, onSortItems }: any) {
         <RiArrowUpSLine
           className={classNames(
             "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
-            sortDirection === "desc" ? "opacity-30" : ""
+            sortDirection === "desc" ? "opacity-30" : "",
           )}
           aria-hidden={true}
         />
         <RiArrowDownSLine
           className={classNames(
             "h-4 w-4 text-tremor-content-strong dark:text-dark-tremor-content-strong",
-            sortDirection === "asc" ? "opacity-30" : ""
+            sortDirection === "asc" ? "opacity-30" : "",
           )}
           aria-hidden={true}
         />

@@ -13,7 +13,7 @@ async function handler(request: Request) {
   if (db.data.stock_groups?.last_updated) {
     const differenceBetweenLastCache = differenceInDays(
       new Date(),
-      new Date(db.data.stock_groups?.last_updated)
+      new Date(db.data.stock_groups?.last_updated),
     );
     if (differenceBetweenLastCache <= 15) {
       return db.data.stock_groups.fno;

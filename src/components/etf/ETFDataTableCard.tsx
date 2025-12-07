@@ -46,10 +46,10 @@ const ETFDataTableCard = () => {
       setFilteredDataItems(
         newIndex === 0
           ? dataItems
-          : dataItems.filter((item: any) => item.assetClassType === classType)
+          : dataItems.filter((item: any) => item.assetClassType === classType),
       );
     },
-    [dataItems]
+    [dataItems],
   );
 
   const onSortItems = useCallback((keyName: string, direction: string) => {
@@ -58,9 +58,9 @@ const ETFDataTableCard = () => {
         .sort((a: any, b: any) =>
           direction === "desc"
             ? b[keyName] - a[keyName]
-            : a[keyName] - b[keyName]
+            : a[keyName] - b[keyName],
         )
-        .map((item) => item)
+        .map((item) => item),
     );
   }, []);
 

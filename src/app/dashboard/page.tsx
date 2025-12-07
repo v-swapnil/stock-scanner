@@ -36,7 +36,7 @@ async function getStockData(searchParams: TPageSearchParams) {
       .filter(
         (item: any) =>
           searchParams.expensive_stocks === "true" ||
-          item.currentPriceExact < 10000
+          item.currentPriceExact < 10000,
       )
       .map((item: any) => addStockInsights(item));
     return filteredDataItems as TStockDataItems;
@@ -73,7 +73,7 @@ function Home({ searchParams }: IHomePageProps) {
   useEffect(() => {
     const getStockData = async () => {
       const response = await axios.get(
-        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString()
+        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString(),
       );
       setStocksDataItems(response.data || []);
       setLoading(false);

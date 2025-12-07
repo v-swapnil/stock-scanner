@@ -20,7 +20,7 @@ async function handler() {
     "NIFTY PHARMA",
     "NIFTY FMCG",
     "NIFTY METAL",
-    "NIFTY CONSUMPTION"
+    "NIFTY CONSUMPTION",
   ];
   const indicesData = responseJson.data
     .filter((item: any) => selectedIndices.includes(item.indexName))

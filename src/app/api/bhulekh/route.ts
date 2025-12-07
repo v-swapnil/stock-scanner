@@ -17,13 +17,13 @@ export async function GET(request: Request) {
           "Content-Type": "application/json",
           Accept: "application/json, text/plain, */*",
         },
-      }
+      },
     );
     const resJson = await res.text();
     console.log(resJson);
     return Response.json(resJson);
   } catch (err) {
     console.log(err);
-    return Response.json('');
+    return Response.json("");
   }
 }

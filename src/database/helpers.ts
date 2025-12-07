@@ -19,7 +19,7 @@ const defaultData: DbSchemaType = {
 export const getDBInstance = async () => {
   const db = await JSONFilePreset<DbSchemaType>(
     "src/database/db.json",
-    defaultData
+    defaultData,
   );
   return db;
 };

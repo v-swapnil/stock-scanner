@@ -47,8 +47,8 @@ function StockDataTableCard({
       positive / data.length > 0.6
         ? "Positive"
         : negative / data.length > 0.6
-        ? "Negative"
-        : "Neutral";
+          ? "Negative"
+          : "Neutral";
 
     return marketSentiment;
   }, [data]);
@@ -119,9 +119,9 @@ function StockDataTableCard({
         .sort((a: any, b: any) =>
           direction === "desc"
             ? b[keyName] - a[keyName]
-            : a[keyName] - b[keyName]
+            : a[keyName] - b[keyName],
         )
-        .map((item) => item)
+        .map((item) => item),
     );
   }, []);
 

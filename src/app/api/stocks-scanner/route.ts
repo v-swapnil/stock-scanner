@@ -25,7 +25,7 @@ async function handler(searchParams: Record<string, string>) {
     .filter(
       (item: any) =>
         searchParams.expensive_stocks === "true" ||
-        item.currentPriceExact < 10000
+        item.currentPriceExact < 10000,
     )
     .map((item: any) => addStockInsights(item));
   return filteredDataItems as TStockDataItems;

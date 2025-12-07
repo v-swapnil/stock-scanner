@@ -1,10 +1,5 @@
 import { memo } from "react";
-import {
-  TableHead,
-  TableHeaderCell,
-  TableRow,
-  Flex,
-} from "@tremor/react";
+import { TableHead, TableHeaderCell, TableRow, Flex } from "@tremor/react";
 import SortableColumn from "../../shared/SortableColumn";
 
 interface StockTableHeaderProps {

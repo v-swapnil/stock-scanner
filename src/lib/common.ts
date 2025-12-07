@@ -13,7 +13,7 @@ export function toFixedIntegerNumber(value: number) {
 }
 
 export function getChangeGroupTypeToDeltaType(
-  changeGroupType: TChangeGroupType
+  changeGroupType: TChangeGroupType,
 ) {
   switch (changeGroupType) {
     case "Crazy Selling":
@@ -121,7 +121,7 @@ export function getDeltaTypeFromChangePercentage(changeValue: string) {
 export function getDiffOfPricesInPercentage(
   price1: number,
   price2: number,
-  fractionDigits: number
+  fractionDigits: number,
 ) {
   if (fractionDigits === 0) {
     return toFixedIntegerNumber(((price1 - price2) / price1) * 100);
@@ -163,7 +163,7 @@ export function getStockHighlights(stockDetails: TStockDataItem) {
     "low-gains-6m": stockDetails.sixMonthChangeExact <= 10,
   };
   return Object.keys(highlights).filter(
-    (item) => highlights[item as THighlights]
+    (item) => highlights[item as THighlights],
   ) as Array<THighlights>;
 }
 
@@ -210,7 +210,7 @@ export function getSearchTerms(stockDetails: TStockDataItem) {
 export function getStockRangeDetails(
   currentPrice: number,
   lowPrice: number,
-  highPrice: number
+  highPrice: number,
 ) {
   const upFromLow = ((currentPrice - lowPrice) / lowPrice) * 100;
   const downFromHigh = ((highPrice - currentPrice) / highPrice) * 100;

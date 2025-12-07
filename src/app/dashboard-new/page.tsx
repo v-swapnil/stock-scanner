@@ -25,7 +25,7 @@ export default function Home({ searchParams }: IHomePageProps) {
   useEffect(() => {
     const getStockData = async () => {
       const response = await axios.get(
-        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString()
+        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString(),
       );
       setStocksDataItems(response.data || []);
       setLoading(false);

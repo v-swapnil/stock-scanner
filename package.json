@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "scan": "next dev & npx react-scan@latest localhost:3001"
+    "scan": "next dev & npx react-scan@latest localhost:3001",
+    "format": "prettier --write \"**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@headlessui/react": "^1.7.19",
@@ -41,6 +42,8 @@
     "eslint": "^8",
     "eslint-config-next": "14.0.1",
     "postcss": "^8",
+    "prettier": "3.7.4",
+    "prettier-eslint": "^16.4.2",
     "typescript": "^5"
   }
 }

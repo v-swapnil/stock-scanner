@@ -58,7 +58,7 @@ const OptionsSimulator = () => {
     "timeToMaturityInYears",
     timeToMaturityInYears,
     impliedVolatility,
-    riskFreeRateFraction
+    riskFreeRateFraction,
   );
 
   const calculateBlackScholes = () => {
@@ -103,7 +103,7 @@ const OptionsSimulator = () => {
     const payoffs = prices.map((price) =>
       optionType === "call"
         ? Math.max(0, price - strikePrice)
-        : Math.max(0, strikePrice - price)
+        : Math.max(0, strikePrice - price),
     );
 
     for (let i = steps - 1; i >= 0; i--) {
@@ -129,7 +129,7 @@ const OptionsSimulator = () => {
         Math.exp(
           (riskFreeRateFraction - 0.5 * Math.pow(impliedVolatility, 2)) *
             timeToMaturityInYears +
-            impliedVolatility * z * Math.sqrt(timeToMaturityInYears)
+            impliedVolatility * z * Math.sqrt(timeToMaturityInYears),
         );
 
       const payoff =

@@ -20,10 +20,10 @@ export function useIndexData() {
 
         const pointChanged = responseJson.reduce(
           (prev, item) => prev + item.pointchange,
-          0
+          0,
         );
         const niftyNegative = responseJson.filter(
-          (item) => item.pointchange < 0
+          (item) => item.pointchange < 0,
         ).length;
         const niftyPositive = 50 - niftyNegative;
 
@@ -64,16 +64,16 @@ export function useIndexData() {
       // Bank Nifty Contributions
       const getBankNiftyContributions = async () => {
         const response = await axios.get(
-          "/api/contributors-v2?indexId=niftyBank"
+          "/api/contributors-v2?indexId=niftyBank",
         );
         const responseJson: Array<TIndexDataContributorItem> = response.data;
 
         const pointChanged = responseJson.reduce(
           (prev, item) => prev + item.pointchange,
-          0
+          0,
         );
         const bankNiftyNegative = responseJson.filter(
-          (item) => item.pointchange < 0
+          (item) => item.pointchange < 0,
         ).length;
         const bankNiftyPositive = responseJson.length - bankNiftyNegative;
 
@@ -107,7 +107,7 @@ export function useIndexData() {
           ...prev,
           pointChanged: parseFloat(pointChanged?.toFixed(2)),
           advanceDecline: toFixedIntegerNumber(
-            (bankNiftyPositive / responseJson.length) * 100
+            (bankNiftyPositive / responseJson.length) * 100,
           ),
           contributors: contributors,
         }));
@@ -118,10 +118,10 @@ export function useIndexData() {
         const response = await axios.get("/api/indices");
         const responseJson: Array<any> = response.data || [];
         const niftyIndexData = responseJson.find(
-          (item) => item.indexName === "NIFTY 50"
+          (item) => item.indexName === "NIFTY 50",
         );
         const niftyBankIndexData = responseJson.find(
-          (item) => item.indexName === "NIFTY BANK"
+          (item) => item.indexName === "NIFTY BANK",
         );
         setNiftyMetrics((prev) => ({
           ...prev,

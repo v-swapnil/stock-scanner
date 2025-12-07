@@ -33,9 +33,7 @@ function StockDataTable({
   const insights = useStockTableInsights(filteredWithFavorites);
 
   return (
-    <Table
-      className="mt-4 stock-details-table dark:bg-gray-950"
-    >
+    <Table className="mt-4 stock-details-table dark:bg-gray-950">
       <StockTableHeader
         showFundamentals={showFundamentals}
         showYearlyChange={showYearlyChange}
@@ -43,18 +41,19 @@ function StockDataTable({
         showCurrentWeekMonthRange={showCurrentWeekMonthRange}
         onSortItems={onSortItems}
       />
-      <TableBody>{filteredWithFavorites.map((item) => (
-        <StockTableRow
-          key={item.name}
-          item={item}
-          showFundamentals={showFundamentals}
-          showYearlyChange={showYearlyChange}
-          showMovingAverages={showMovingAverages}
-          showCurrentWeekMonthRange={showCurrentWeekMonthRange}
-          onChangeSector={onChangeSector}
-          onChangeFavorites={onChangeFavorites}
-        />
-      ))}
+      <TableBody>
+        {filteredWithFavorites.map((item) => (
+          <StockTableRow
+            key={item.name}
+            item={item}
+            showFundamentals={showFundamentals}
+            showYearlyChange={showYearlyChange}
+            showMovingAverages={showMovingAverages}
+            showCurrentWeekMonthRange={showCurrentWeekMonthRange}
+            onChangeSector={onChangeSector}
+            onChangeFavorites={onChangeFavorites}
+          />
+        ))}
       </TableBody>
       <StockTableFooter
         insights={insights}

@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { TStockDataItem } from "@/lib/types";
 import { getDeltaTypeFromChangePercentage, toFixedNumber } from "@/lib/common";
 
-export function useStockTableInsights(filteredWithFavorites: Array<TStockDataItem>) {
+export function useStockTableInsights(
+  filteredWithFavorites: Array<TStockDataItem>,
+) {
   return useMemo(() => {
     let totalPriceEarningRatio = 0;
     let totalForwardPriceEarningRatio = 0;
@@ -35,10 +37,10 @@ export function useStockTableInsights(filteredWithFavorites: Array<TStockDataIte
     const numberOfRows = filteredWithFavorites.length;
     const averages = {
       avgPriceEarningRatio: toFixedNumber(
-        totalPriceEarningRatio / numberOfRows
+        totalPriceEarningRatio / numberOfRows,
       ),
       avgForwardPriceEarningRatio: toFixedNumber(
-        totalForwardPriceEarningRatio / numberOfRows
+        totalForwardPriceEarningRatio / numberOfRows,
       ),
       avgPreMarketChange: toFixedNumber(totalPreMarketChange / numberOfRows),
       avgDayChange: toFixedNumber(totalDayChange / numberOfRows),
@@ -56,37 +58,37 @@ export function useStockTableInsights(filteredWithFavorites: Array<TStockDataIte
       ...averages,
       avgPriceEarningRatioExact: parseFloat(averages.avgPriceEarningRatio),
       avgForwardPriceEarningRatioExact: parseFloat(
-        averages.avgForwardPriceEarningRatio
+        averages.avgForwardPriceEarningRatio,
       ),
       avgPreMarketChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgPreMarketChange
+        averages.avgPreMarketChange,
       ) as "increase" | "decrease" | "unchanged",
       avgDayChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgDayChange
+        averages.avgDayChange,
       ) as "increase" | "decrease" | "unchanged",
       avgWeekChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgWeekChange
+        averages.avgWeekChange,
       ) as "increase" | "decrease" | "unchanged",
       avgMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgMonthChange
+        averages.avgMonthChange,
       ) as "increase" | "decrease" | "unchanged",
       avgThreeMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgThreeMonthChange
+        averages.avgThreeMonthChange,
       ) as "increase" | "decrease" | "unchanged",
       avgSixMonthChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgSixMonthChange
+        averages.avgSixMonthChange,
       ) as "increase" | "decrease" | "unchanged",
       avgOneYearChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgOneYearChange
+        averages.avgOneYearChange,
       ) as "increase" | "decrease" | "unchanged",
       avgFiveYearChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgFiveYearChange
+        averages.avgFiveYearChange,
       ) as "increase" | "decrease" | "unchanged",
       avgUDLChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgUDLChange
+        averages.avgUDLChange,
       ) as "increase" | "decrease" | "unchanged",
       avgDDHChangeDeltaType: getDeltaTypeFromChangePercentage(
-        averages.avgDDHChange
+        averages.avgDDHChange,
       ) as "increase" | "decrease" | "unchanged",
     };
   }, [filteredWithFavorites]);

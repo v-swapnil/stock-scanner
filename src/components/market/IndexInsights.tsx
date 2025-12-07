@@ -45,8 +45,8 @@ function IndexInsights({
               pointsChanged > 0
                 ? "increase"
                 : pointsChanged < 0
-                ? "decrease"
-                : "unchanged"
+                  ? "decrease"
+                  : "unchanged"
             }
           >
             {pointsChanged}

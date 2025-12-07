@@ -41,8 +41,8 @@ function Options() {
           key === "iv"
             ? ((item.f[idx] as number) * 100).toFixed(2)
             : typeof item.f[idx] === "number"
-            ? (item.f[idx] as number).toFixed(2)
-            : item.f[idx];
+              ? (item.f[idx] as number).toFixed(2)
+              : item.f[idx];
       });
       return result;
     });
@@ -63,7 +63,7 @@ function Options() {
             item.substring(0, 4),
             item.substring(4, 6),
             item.substring(6, 8),
-          ].join("-")
+          ].join("-"),
         );
         const mappings: any = {};
         groupedByExpiry[item].forEach((elem: any) => {
@@ -86,7 +86,7 @@ function Options() {
           }).format(expiryDate),
           expiryDateISO: expiryDate.toISOString(),
           dataItems: Object.values(mappings).sort(
-            (a, b) => a.strikeExact - b.strikeExact
+            (a, b) => a.strikeExact - b.strikeExact,
           ),
         };
       })
