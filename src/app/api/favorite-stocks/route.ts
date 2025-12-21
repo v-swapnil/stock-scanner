@@ -1,4 +1,9 @@
 import { getDBInstance } from "@/database/helpers";
+import { z } from "zod";
+
+const toggleSchema = z.object({
+  stockId: z.string().min(1),
+});
 
 export async function GET() {
   const db = await getDBInstance();
@@ -8,7 +13,14 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { stockId }: { stockId: string } = await request.json();
+  const body = await request.json();
+  const parsed = toggleSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return Response.json({ type: "error", message: "Invalid payload" }, { status: 400 });
+  }
+
+  const { stockId } = parsed.data;
 
   const db = await getDBInstance();
 

@@ -1,6 +1,7 @@
 export type TPageSearchParams = {
-  market_cap_in_billions: string;
-  expensive_stocks: string;
+  market_cap_in_billions?: string;
+  expensive_stocks?: string;
+  limit?: string;
 };
 
 export type TChangeGroupType =

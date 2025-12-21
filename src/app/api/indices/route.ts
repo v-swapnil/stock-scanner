@@ -1,7 +1,16 @@
+const indicesWatchUrl =
+  "https://iislliveblob.niftyindices.com/jsonfiles/LiveIndicesWatch.json";
+
 async function handler() {
-  const indicesWatchUrl =
-    "https://iislliveblob.niftyindices.com/jsonfiles/LiveIndicesWatch.json";
-  const response = await fetch(indicesWatchUrl, { cache: "no-store" });
+  const response = await fetch(indicesWatchUrl, {
+    // Moderate revalidation is fine; upstream updates frequently.
+    next: { revalidate: 60 },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Indices fetch failed: ${response.status}`);
+  }
+
   const responseJson = await response.json();
 
   const selectedIndices = [
@@ -22,18 +31,17 @@ async function handler() {
     "NIFTY METAL",
     "NIFTY CONSUMPTION",
   ];
-  const indicesData = responseJson.data
-    .filter((item: any) => selectedIndices.includes(item.indexName))
-    .map((item: any) => item);
 
-  return indicesData;
+  return (responseJson.data || []).filter((item: any) =>
+    selectedIndices.includes(item.indexName),
+  );
 }
 
 export async function GET() {
   try {
     const result = await handler();
-    return Response.json(result);
+    return Response.json(result, { status: 200 });
   } catch (err) {
-    return Response.json({});
+    return Response.json({ type: "error", message: "Failed to fetch indices" }, { status: 502 });
   }
 }

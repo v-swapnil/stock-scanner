@@ -1,8 +1,5 @@
-"use client";
-
-import ETFDataTableCard from "@/components/etf/ETFDataTableCard";
+import IndexCard from "@/components/market/IndexCard";
 import InsightCard from "@/components/market/InsightCard";
-import MarketIndicesAnalysis from "@/components/market/MarketIndicesAnalysis";
 import StockDataTableCard from "@/components/StockDataTableCard";
 import {
   addStockInsights,
@@ -11,54 +8,62 @@ import {
   getMetricsFromStockData,
   getPayloadForRequest,
 } from "@/lib/data-format";
-import {
-  TIndexDataItems,
-  TPageSearchParams,
-  TStockDataItems,
-} from "@/lib/types";
+import { TIndexDataItems, TPageSearchParams, TStockDataItems } from "@/lib/types";
 import { Flex } from "@tremor/react";
-import axios from "axios";
-import { useState, useEffect, useMemo } from "react";
-import { RiLoader5Line } from "@remixicon/react";
 
-async function getStockData(searchParams: TPageSearchParams) {
+const tradingViewScanUrl = "https://scanner.tradingview.com/india/scan";
+const indicesWatchUrl = "https://iislliveblob.niftyindices.com/jsonfiles/LiveIndicesWatch.json";
+
+async function fetchStocks(searchParams: TPageSearchParams): Promise<TStockDataItems> {
   const marketCapInBillions = searchParams.market_cap_in_billions
     ? parseInt(searchParams.market_cap_in_billions) || 75
     : 75;
-  const dataUrl = "https://scanner.tradingview.com/india/scan";
-  const dataPayload = getPayloadForRequest({ marketCapInBillions });
+  const limit = searchParams.limit ? parseInt(searchParams.limit) : undefined;
+  const payload = getPayloadForRequest({ marketCapInBillions, limit });
+
   try {
-    const response = await axios.post(dataUrl, dataPayload);
-    const dataItems = response.data.data;
+    const response = await fetch(tradingViewScanUrl, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "content-type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`TradingView scan failed: ${response.status}`);
+    }
+
+    const responseJson = await response.json();
+    const dataItems = responseJson.data || [];
     const formattedDataItems = getFormattedDataItems(dataItems);
     const filteredDataItems = formattedDataItems
-      // Remove Expensive Stocks
       .filter(
         (item: any) =>
-          searchParams.expensive_stocks === "true" ||
-          item.currentPriceExact < 10000,
+          searchParams.expensive_stocks === "true" || item.currentPriceExact < 10000,
       )
       .map((item: any) => addStockInsights(item));
+
     return filteredDataItems as TStockDataItems;
-  } catch (error: any) {
-    if (error.response) {
-      console.error("Error getting stock data from TradingView.");
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error("error.response", error.response.data);
-      console.error("error.response", error.response.status);
-      console.error("error.response", error.response.headers);
-    } else if (error.request) {
-      // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      console.error("error.request", error.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error("Error", error.message);
+  } catch (error) {
+    console.error("Failed to fetch stocks", error);
+    return [] as TStockDataItems;
+  }
+}
+
+async function fetchIndices(): Promise<TIndexDataItems> {
+  try {
+    const response = await fetch(indicesWatchUrl, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) {
+      throw new Error(`Indices fetch failed: ${response.status}`);
     }
-    console.error("error.config", error.config);
-    return [];
+    const responseJson = await response.json();
+    const formatted = getFormattedIndices(responseJson.data || []);
+    return formatted;
+  } catch (error) {
+    console.error("Failed to fetch indices", error);
+    return [] as TIndexDataItems;
   }
 }
 
@@ -66,65 +71,30 @@ interface IHomePageProps {
   searchParams: TPageSearchParams;
 }
 
-function Home({ searchParams }: IHomePageProps) {
-  const [isLoading, setLoading] = useState(true);
-  const [stocksDataItems, setStocksDataItems] = useState([]);
+export default async function Home({ searchParams }: IHomePageProps) {
+  const [stocksDataItems, indexDataItems] = await Promise.all([
+    fetchStocks(searchParams),
+    fetchIndices(),
+  ]);
 
-  useEffect(() => {
-    const getStockData = async () => {
-      const response = await axios.get(
-        "/api/stocks-scanner?" + new URLSearchParams(searchParams).toString(),
-      );
-      setStocksDataItems(response.data || []);
-      setLoading(false);
-    };
-    getStockData();
-  }, [searchParams]);
-
-  const stocksMetrics = useMemo(() => {
-    return getMetricsFromStockData(stocksDataItems || []);
-  }, [stocksDataItems]);
-
-  // const stocksDataItems = await getStockData(searchParams);
-  // const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center w-full h-screen">
-        <RiLoader5Line color="white" className="animate-spin" size={48} />
-      </div>
-    );
-  }
+  const stocksMetrics = getMetricsFromStockData(stocksDataItems || []);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
       <Flex className="px-2">
         <InsightCard title="Day Change" data={stocksMetrics.changeInsights} />
-        <InsightCard
-          title="Week Change"
-          data={stocksMetrics.weekChangeInsights}
-        />
-        <InsightCard
-          title="Month Change"
-          data={stocksMetrics.monthChangeInsights}
-        />
-        {/* <InsightCard
-          title="3 Month Change"
-          data={stocksMetrics.threeMonthChangeInsights}
-        />
-        <InsightCard
-          title="6 Month Change"
-          data={stocksMetrics.sixMonthChangeInsights}
-        /> */}
+        <InsightCard title="Week Change" data={stocksMetrics.weekChangeInsights} />
+        <InsightCard title="Month Change" data={stocksMetrics.monthChangeInsights} />
       </Flex>
       <StockDataTableCard
         data={stocksDataItems}
         priceEarningBySector={stocksMetrics.priceEarningBySector}
       />
-      <ETFDataTableCard />
-      <MarketIndicesAnalysis />
+      <Flex className="gap-4 p-6 flex-wrap">
+        {indexDataItems.map((item) => (
+          <IndexCard key={item.indexName} item={item} showRangeBar={false} />
+        ))}
+      </Flex>
     </main>
   );
 }
-
-export default Home;

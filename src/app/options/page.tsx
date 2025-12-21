@@ -1,343 +1,158 @@
 "use client";
 
-import {
-  Select,
-  SelectItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeaderCell,
-  TableRow,
-} from "@tremor/react";
-
-import "./styles.css";
-import classNames from "classnames";
 import { useEffect, useMemo, useState } from "react";
+import { Card, Flex, Select, SelectItem, Title, Text, NumberInput } from "@tremor/react";
+import OptionChainTable from "@/components/options/OptionChainTable";
+import StrategyBuilder from "@/components/options/StrategyBuilder";
+import { OptionChain } from "@/lib/options";
 
-import sample from "./sample.json";
-import sample2 from "./sample-2.json";
+type ChainResponse = { chain: OptionChain; summary: any };
 
-function Options() {
-  const [optionExpiries, setOptionExpiries] = useState<any[]>([]);
-  const [selectedExpiry, setSelectedExpiry] = useState<string>("");
+const symbols = [
+  { value: "NIFTY", label: "NIFTY" },
+  { value: "NIFTYBANK", label: "BANKNIFTY" },
+];
 
-  const [optionsData, setOptionsData] = useState([]);
+export default function OptionsPage() {
+  const [symbol, setSymbol] = useState<string>(symbols[0].value);
+  const [expiry, setExpiry] = useState<string>("");
+  const [chain, setChain] = useState<OptionChain | null>(null);
+  const [prevChain, setPrevChain] = useState<OptionChain | null>(null);
+  const [summary, setSummary] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [visibleStrikes, setVisibleStrikes] = useState(50);
+
+  const fetchChain = async (sym: string, exp?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ symbol: sym });
+      if (exp) params.set("expiry", exp);
+      const res = await fetch(`/api/options/chain?${params.toString()}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("Failed to load chain");
+      const json: ChainResponse = await res.json();
+      setPrevChain(chain);
+      setChain(json.chain);
+      setSummary(json.summary);
+      if (!exp) setExpiry(json.chain.expiry);
+    } catch (err: any) {
+      setError(err?.message || "Failed to load chain");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchExpiries = async (sym: string) => {
+    const res = await fetch(`/api/options/expiries?symbol=${sym}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.expiries || [];
+  };
+
+  const [expiries, setExpiries] = useState<string[]>([]);
 
   useEffect(() => {
-    // const getOptionsData = async () => {
-    //   const response = await axios.get("/api/options-scanner?");
-    //   setOptionsData(response.data || []);
-    // };
-    // getOptionsData();
+    (async () => {
+      await fetchChain(symbol);
+      const list = await fetchExpiries(symbol);
+      setExpiries(list);
+    })();
+  }, [symbol]);
 
-    // getFormattedOptionsDataItems
+  useEffect(() => {
+    if (expiry) fetchChain(symbol, expiry);
+  }, [expiry]);
 
-    const field = sample.fields;
-    const symbolsMapped = sample.symbols.map((item) => {
-      const result: any = {};
-      field.forEach((key, idx) => {
-        result[key] =
-          key === "iv"
-            ? ((item.f[idx] as number) * 100).toFixed(2)
-            : typeof item.f[idx] === "number"
-              ? (item.f[idx] as number).toFixed(2)
-              : item.f[idx];
-      });
-      return result;
-    });
-
-    const groupedByExpiry = symbolsMapped.reduce((acc, item) => {
-      if (acc[item.expiration]) {
-        acc[item.expiration].push(item);
-      } else {
-        acc[item.expiration] = [item];
-      }
-      return acc;
-    }, {});
-
-    const expiries = Object.keys(groupedByExpiry)
-      .map((item) => {
-        const expiryDate = new Date(
-          [
-            item.substring(0, 4),
-            item.substring(4, 6),
-            item.substring(6, 8),
-          ].join("-"),
-        );
-        const mappings: any = {};
-        groupedByExpiry[item].forEach((elem: any) => {
-          if (mappings[elem.strike]) {
-            mappings[elem.strike][elem["option-type"]] = elem;
-          } else {
-            mappings[elem.strike] = {
-              strike: elem.strike,
-              strikeExact: parseFloat(elem.strike),
-              [elem["option-type"]]: elem,
-            };
-          }
-          return mappings;
-        });
-        return {
-          expiryId: item,
-          expiryIdExact: parseInt(item),
-          expiryDate: new Intl.DateTimeFormat("en-US", {
-            dateStyle: "medium",
-          }).format(expiryDate),
-          expiryDateISO: expiryDate.toISOString(),
-          dataItems: Object.values(mappings).sort(
-            (a, b) => a.strikeExact - b.strikeExact,
-          ),
-        };
-      })
-      .sort((a, b) => a.expiryIdExact - b.expiryIdExact);
-
-    console.log(expiries);
-    setOptionExpiries(expiries);
-  }, []);
-
-  const optionDataItems = useMemo(() => {
-    return (
-      optionExpiries.find((item) => item.expiryId === selectedExpiry)
-        ?.dataItems || []
-    );
-  }, [optionExpiries, selectedExpiry]);
-
-  const atmIndex = optionDataItems.length / 2;
-
-  const data = new Array(20).fill(0);
-
-  const sample2Updates = useMemo(() => {
-    return sample2.map((item) => ({
-      ...item,
-      putIntrinsicValue:
-        item.strikePrice - item.PE.underlyingValue < 0
-          ? 0
-          : item.strikePrice - item.PE.underlyingValue,
-      callIntrinsicValue:
-        item.PE.underlyingValue - item.strikePrice < 0
-          ? 0
-          : item.PE.underlyingValue - item.strikePrice,
-    }));
-  }, []);
+  const filteredChain = useMemo(() => {
+    if (!chain) return null;
+    const strikes = chain.strikes;
+    if (!visibleStrikes || visibleStrikes >= strikes.length) return chain;
+    const center = Math.floor(strikes.length / 2);
+    const half = Math.floor(visibleStrikes / 2);
+    const start = Math.max(0, center - half);
+    const end = Math.min(strikes.length, center + half + 1);
+    return { ...chain, strikes: strikes.slice(start, end) } as OptionChain;
+  }, [chain, visibleStrikes]);
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <Select
-        className="w-[240px]"
-        value={selectedExpiry}
-        onValueChange={(newValue) => setSelectedExpiry(newValue)}
-        enableClear={false}
-      >
-        {optionExpiries.map((item) => (
-          <SelectItem key={item.expiryId} value={item.expiryId}>
-            {item.expiryDate}
-          </SelectItem>
-        ))}
-      </Select>
+    <main className="flex min-h-screen flex-col gap-4 p-6">
+      <Flex justifyContent="between" alignItems="center" className="flex-wrap gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Title>Option Chain</Title>
+          <Select value={symbol} onValueChange={(v) => setSymbol(v)} enableClear={false} className="w-44">
+            {symbols.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </Select>
+          <Select
+            value={expiry}
+            onValueChange={(v) => setExpiry(v)}
+            placeholder="Expiry"
+            enableClear={false}
+            className="w-52"
+          >
+            {expiries.map((e) => (
+              <SelectItem key={e} value={e}>
+                {e}
+              </SelectItem>
+            ))}
+          </Select>
+          <div className="flex items-center gap-2">
+            <Text>Visible strikes</Text>
+            <NumberInput className="w-28" value={visibleStrikes} onValueChange={(v) => setVisibleStrikes(Number(v))} />
+          </div>
+        </div>
+        <Card className="flex items-center gap-6 px-4 py-2 bg-gray-900 border border-gray-800 min-w-[320px]">
+          <div>
+            <div className="text-sm text-gray-400">ATM Strike</div>
+            <div className="text-lg font-semibold">{summary?.atmStrike ?? "-"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">Avg Spread</div>
+            <div className="text-lg font-semibold">{summary?.avgSpread ?? "-"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">IV Avg</div>
+            <div className="text-lg font-semibold">{summary?.ivStats?.avg ?? "-"}%</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">PCR</div>
+            <div className="text-lg font-semibold">{summary?.pcr ?? "-"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">Call IV Avg</div>
+            <div className="text-lg font-semibold">{summary?.callIvAvg ?? "-"}%</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">Put IV Avg</div>
+            <div className="text-lg font-semibold">{summary?.putIvAvg ?? "-"}%</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">IV Skew (C-P)</div>
+            <div className="text-lg font-semibold">{summary?.ivSkew ?? "-"}%</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-400">Implied Move</div>
+            <div className="text-lg font-semibold">{summary?.impliedMovePct ? `${summary.impliedMovePct}%` : "-"}</div>
+          </div>
+        </Card>
+      </Flex>
 
-      <Table className="options-table-container mx-6 overflow-visible">
-        <TableHead>
-          <TableRow className="border-b border-gray-800">
-            <TableHeaderCell className="text-center" colSpan={7}>
-              Calls
-            </TableHeaderCell>
-            <TableHeaderCell className="text-center" colSpan={7}>
-              Puts
-            </TableHeaderCell>
-          </TableRow>
-          <TableRow className="border-b border-gray-800">
-            <TableHeaderCell className="text-center">Theta</TableHeaderCell>
-            <TableHeaderCell className="text-center">Delta</TableHeaderCell>
-            <TableHeaderCell className="text-center">Price</TableHeaderCell>
-            <TableHeaderCell className="text-center">Bid</TableHeaderCell>
-            <TableHeaderCell className="text-center">Ask</TableHeaderCell>
-            <TableHeaderCell className="text-center">Spread</TableHeaderCell>
-            {/* <TableHeaderCell className="text-center strike-bg">
-              IV
-            </TableHeaderCell> */}
-            <TableHeaderCell className="text-center strike-bg">
-              Strike
-            </TableHeaderCell>
-            <TableHeaderCell className="text-center strike-bg">
-              IV
-            </TableHeaderCell>
-            <TableHeaderCell className="text-center">Spread</TableHeaderCell>
-            <TableHeaderCell className="text-center">Ask</TableHeaderCell>
-            <TableHeaderCell className="text-center">Bid</TableHeaderCell>
-            <TableHeaderCell className="text-center">Price</TableHeaderCell>
-            <TableHeaderCell className="text-center">Delta</TableHeaderCell>
-            <TableHeaderCell className="text-center">Theta</TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {optionDataItems.map((item: any, index: number) => (
-            <TableRow key={item + index}>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {item.call.theta}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {item.call.delta}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {item.call.theoPrice}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {item.call.bid}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {item.call.ask}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index <= atmIndex,
-                })}
-              >
-                {(item.call.ask - item.call.bid).toFixed(2)}
-              </TableCell>
-              {/* <TableCell
-                className={classNames("text-center", "strike-bg", {
-                  "atm-bg": index === atmIndex,
-                })}
-              >
-                {item.call.iv}
-              </TableCell> */}
-              <TableCell
-                className={classNames("text-center", "strike-bg", {
-                  "atm-bg": index === atmIndex,
-                })}
-              >
-                {item.strike}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", "strike-bg", {
-                  "atm-bg": index === atmIndex,
-                })}
-              >
-                {item.put.iv}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {(item.put.ask - item.put.bid)?.toFixed(2)}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {item.put.ask}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {item.put.bid}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {item.put.theoPrice}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {item.put.delta}
-              </TableCell>
-              <TableCell
-                className={classNames("text-center", {
-                  "itm-bg": index >= atmIndex,
-                })}
-              >
-                {item.put.theta}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {error && <Card className="border border-red-500 bg-red-950 text-red-100 p-3">{error}</Card>}
+      {loading && <Card className="border border-gray-800 bg-gray-900 p-3">Loading chain…</Card>}
 
-      <table
-        style={{
-          background: "white",
-        }}
-      >
-        <thead>
-          <tr>
-            <th colSpan={3}>CALL</th>
-            <th></th>
-            <th colSpan={3}>PUT</th>
-          </tr>
-          <tr>
-            <th>OI</th>
-            <th>IV</th>
-            <th>LTP</th>
-            <th>INTRINSIC VALUE</th>
-            <th>PREMIUM</th>
-            <th>STRIKE</th>
-            <th>PREMIUM</th>
-            <th>INTRINSIC VALUE</th>
-            <th>LTP</th>
-            <th>IV</th>
-            <th>OI</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sample2Updates.map((item) => (
-            <tr
-              key={item.strikePrice}
-              style={{
-                textAlign: "center",
-                background: item.strikePrice === 23300 ? "gray" : "",
-              }}
-            >
-              <td>{item.CE.openInterest}</td>
-              <td>{item.CE.impliedVolatility}</td>
-              <td>{item.CE.lastPrice?.toFixed(2)}</td>
-              <td>{item.callIntrinsicValue?.toFixed(2)}</td>
-              <td>
-                {(item.CE.lastPrice - item.callIntrinsicValue)?.toFixed(2)}
-              </td>
-              <td>
-                <strong>{item.strikePrice}</strong>
-              </td>
-              <td>{(item.PE.lastPrice - item.putIntrinsicValue).toFixed(2)}</td>
-              <td>{item.putIntrinsicValue?.toFixed(2)}</td>
-              <td>{item.PE.lastPrice?.toFixed(2)}</td>
-              <td>{item.PE.impliedVolatility}</td>
-              <td>{item.PE.openInterest}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {filteredChain && !loading && (
+        <OptionChainTable chain={filteredChain} prevChain={prevChain} />
+      )}
+
+      <StrategyBuilder />
     </main>
   );
 }
-
-export default Options;

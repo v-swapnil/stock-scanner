@@ -29,28 +29,23 @@ function StockDataTableCard({
   const [selectedViews, setSelectedViews] = useState(["Basic"]);
 
   const marketSentiment = useMemo(() => {
+    if (!data.length) return "Neutral";
+
     let positive = 0;
     let negative = 0;
-    let noChange = 0;
 
     data.forEach((item) => {
-      if (item.dayChangeExact === 0) {
-        noChange++;
-      } else if (item.dayChangeExact > 0) {
-        positive++;
-      } else {
-        negative++;
-      }
+      if (item.dayChangeExact === 0) return;
+      if (item.dayChangeExact > 0) positive++;
+      else negative++;
     });
 
-    const marketSentiment =
-      positive / data.length > 0.6
-        ? "Positive"
-        : negative / data.length > 0.6
-          ? "Negative"
-          : "Neutral";
+    const positiveRatio = positive / data.length;
+    const negativeRatio = negative / data.length;
 
-    return marketSentiment;
+    if (positiveRatio > 0.6) return "Positive";
+    if (negativeRatio > 0.6) return "Negative";
+    return "Neutral";
   }, [data]);
 
   const { fnoStocks, favoriteStocks, setFavoriteStocks } = useStockGroups();
@@ -60,16 +55,16 @@ function StockDataTableCard({
   const [isPending, startTransition] = useTransition();
 
   const filteredWithFavorites = useMemo(() => {
-    return filtered.map((item) => {
-      item.isStarred = favoriteStocks.includes(item.name);
-      item.isFnO = fnoStocks.includes(item.name);
-      item.isIndex = item.indexes.length > 0;
-      return item;
-    });
+    return filtered.map((item) => ({
+      ...item,
+      isStarred: favoriteStocks.includes(item.name),
+      isFnO: fnoStocks.includes(item.name),
+      isIndex: item.indexes.length > 0,
+    }));
   }, [filtered, favoriteStocks, fnoStocks]);
 
   const marketContributors = useMemo(() => {
-    const sorted = data.toSorted((a, b) => b.dayChangeExact - a.dayChangeExact);
+    const sorted = [...data].sort((a, b) => b.dayChangeExact - a.dayChangeExact);
     const positiveContributors = sorted
       .slice(0, 4)
       .filter((item) => item.dayChangeExact > 0);
@@ -104,6 +99,7 @@ function StockDataTableCard({
 
   const marketAdvanceDecline = useMemo(() => {
     const total = data.length;
+    if (!total) return 0;
     const negative = data.filter((item) => item.dayChangeExact < 0).length;
     const positive = total - negative;
     return toFixedIntegerNumber((positive / total) * 100);
@@ -115,13 +111,9 @@ function StockDataTableCard({
 
   const onSortItems = useCallback((keyName: string, direction: string) => {
     setFiltered((prevFiltered) =>
-      prevFiltered
-        .sort((a: any, b: any) =>
-          direction === "desc"
-            ? b[keyName] - a[keyName]
-            : a[keyName] - b[keyName],
-        )
-        .map((item) => item),
+      [...prevFiltered].sort((a: any, b: any) =>
+        direction === "desc" ? b[keyName] - a[keyName] : a[keyName] - b[keyName],
+      ),
     );
   }, []);
 
