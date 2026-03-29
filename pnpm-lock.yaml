@@ -17,6 +17,9 @@ importers:
       '@heroicons/react':
         specifier: ^1.0.6
         version: 1.0.6(react@18.3.1)
+      '@radix-ui/react-slot':
+        specifier: ^1.2.4
+        version: 1.2.4(@types/react@18.3.3)(react@18.3.1)
       '@remixicon/react':
         specifier: ^4.2.0
         version: 4.2.0(react@18.3.1)
@@ -38,9 +41,15 @@ importers:
       axios:
         specifier: ^1.6.0
         version: 1.7.2
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -50,6 +59,9 @@ importers:
       lowdb:
         specifier: ^7.0.1
         version: 7.0.1
+      lucide-react:
+        specifier: ^0.562.0
+        version: 0.562.0(react@18.3.1)
       newsapi:
         specifier: ^2.4.1
         version: 2.4.1
@@ -65,9 +77,18 @@ importers:
       react-tooltip:
         specifier: ^5.24.0
         version: 5.27.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.4.0
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.18)
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
       virtua:
         specifier: ^0.37.4
         version: 0.37.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -295,6 +316,24 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@radix-ui/react-compose-refs@1.1.2':
+    resolution: {integrity: sha512-z4eqJvfiNnFMHIIvXP3CY57y2WJs5g2v3X0zm9mEJkrkNv4rDxu+sg9Jh8EkXyeqBkB7SOcboo9dMVqhyrACIg==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@radix-ui/react-slot@1.2.4':
+    resolution: {integrity: sha512-Jl+bCv8HxKnlTLVrcDE8zTMJ09R9/ukw4qBs/oZClOfoQk/cOTbDn+NceXfV7j09YPVQUryJPHurafcSg6EVKA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@remixicon/react@4.2.0':
     resolution: {integrity: sha512-eGhKpZ88OU0qkcY9pJu6khBmItDV82nU130E6C68yc+FbljueHlUYy/4CrJsmf860RIDMay2Rpzl27OSJ81miw==}
@@ -705,6 +744,9 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
+
+  class-variance-authority@0.7.1:
+    resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
   classnames@2.5.1:
     resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
@@ -1566,6 +1608,11 @@ packages:
     resolution: {integrity: sha512-neJAj8GwF0e8EpycYIDFqEPcx9Qz4GUho20jWFR7YiFeXzF1YMLdxB36PypcTSPMA+4+LvgyMacYhlr18Zlymw==}
     engines: {node: '>=18'}
 
+  lucide-react@0.562.0:
+    resolution: {integrity: sha512-82hOAu7y0dbVuFfmO4bYF1XEwYk/mEbM5E+b1jgci/udUBEE/R7LF5Ip0CCEmXe8AybRM8L+04eP+LGZeDvkiw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -2064,6 +2111,14 @@ packages:
   tailwind-merge@1.14.0:
     resolution: {integrity: sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==}
 
+  tailwind-merge@3.4.0:
+    resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
+
+  tailwindcss-animate@1.0.7:
+    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
+
   tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
 
@@ -2109,6 +2164,9 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tw-animate-css@1.4.0:
+    resolution: {integrity: sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -2428,6 +2486,19 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
+
+  '@radix-ui/react-compose-refs@1.1.2(@types/react@18.3.3)(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+    optionalDependencies:
+      '@types/react': 18.3.3
+
+  '@radix-ui/react-slot@1.2.4(@types/react@18.3.3)(react@18.3.1)':
+    dependencies:
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@18.3.3)(react@18.3.1)
+      react: 18.3.1
+    optionalDependencies:
+      '@types/react': 18.3.3
 
   '@remixicon/react@4.2.0(react@18.3.1)':
     dependencies:
@@ -2901,6 +2972,10 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+
+  class-variance-authority@0.7.1:
+    dependencies:
+      clsx: 2.1.1
 
   classnames@2.5.1: {}
 
@@ -3934,6 +4009,10 @@ snapshots:
     dependencies:
       steno: 4.0.2
 
+  lucide-react@0.562.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -4459,6 +4538,12 @@ snapshots:
 
   tailwind-merge@1.14.0: {}
 
+  tailwind-merge@3.4.0: {}
+
+  tailwindcss-animate@1.0.7(tailwindcss@4.1.18):
+    dependencies:
+      tailwindcss: 4.1.18
+
   tailwindcss@4.1.18: {}
 
   tapable@2.2.1: {}
@@ -4499,6 +4584,8 @@ snapshots:
   tslib@2.6.3: {}
 
   tslib@2.8.1: {}
+
+  tw-animate-css@1.4.0: {}
 
   type-check@0.4.0:
     dependencies:

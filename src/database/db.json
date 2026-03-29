@@ -67,6 +67,7 @@
       "AXISBANK",
       "BAJAJ-AUTO",
       "BAJAJFINSV",
+      "BAJAJHLDNG",
       "BAJFINANCE",
       "BANDHANBNK",
       "BANKBARODA",
@@ -94,7 +95,6 @@
       "CONCOR",
       "CROMPTON",
       "CUMMINSIND",
-      "CYIENT",
       "DABUR",
       "DALBHARAT",
       "DELHIVERY",
@@ -121,7 +121,6 @@
       "HDFCBANK",
       "HDFCLIFE",
       "HEROMOTOCO",
-      "HFCL",
       "HINDALCO",
       "HINDPETRO",
       "HINDUNILVR",
@@ -180,7 +179,6 @@
       "NATIONALUM",
       "NAUKRI",
       "NBCC",
-      "NCC",
       "NESTLEIND",
       "NHPC",
       "NMDC",
@@ -208,6 +206,7 @@
       "POWERGRID",
       "POWERINDIA",
       "PPLPHARMA",
+      "PREMIERENE",
       "PRESTIGE",
       "RBLBANK",
       "RECLTD",
@@ -227,6 +226,7 @@
       "SUNPHARMA",
       "SUPREMEIND",
       "SUZLON",
+      "SWIGGY",
       "SYNGENE",
       "TATACONSUM",
       "TATAELXSI",
@@ -236,7 +236,6 @@
       "TCS",
       "TECHM",
       "TIINDIA",
-      "TITAGARH",
       "TITAN",
       "TMPV",
       "TORNTPHARM",
@@ -251,10 +250,11 @@
       "VBL",
       "VEDL",
       "VOLTAS",
+      "WAAREEENER",
       "WIPRO",
       "YESBANK",
       "ZYDUSLIFE"
     ],
-    "last_updated": "2025-12-07T08:26:50.019Z"
+    "last_updated": "2026-01-09T09:33:47.581Z"
   }
 }
